@@ -2,5 +2,7 @@
     <string name="app_name">AZLyrics</string>
     <string name="settings">Settings</string>
     <string name="about">About</string>
-    <string name="enter_artist_name_or_song_title">Enter artist name or song</string>
+    <string name="enter_song_title">Enter song title</string>
+
+    <string name="by">by</string>
 </resources>
