@@ -8,13 +8,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 
 import com.dakakolp.lyricsapp.R;
-import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
+import com.dakakolp.lyricsapp.html.asynctasks.ParseAlbumAsyncTask;
 import com.dakakolp.lyricsapp.ui.adapters.listeners.OnClickSongListener;
 
 public class StartActivity extends AppCompatActivity implements OnClickSongListener {
 
     private RecyclerView mRecyclerViewSongs;
-    private ListSongAdapter mListSongAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,12 +23,12 @@ public class StartActivity extends AppCompatActivity implements OnClickSongListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mRecyclerViewSongs = findViewById(R.id.recycler_view_songs);
+        mRecyclerViewSongs = findViewById(R.id.recycler_view_album);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerViewSongs.setLayoutManager(gridLayoutManager);
 
-        mListSongAdapter = new ListSongAdapter(null, this);
-        mRecyclerViewSongs.setAdapter(mListSongAdapter);
+        ParseAlbumAsyncTask asyncTask = new ParseAlbumAsyncTask(mRecyclerViewSongs, this);
+        asyncTask.execute();
 
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {

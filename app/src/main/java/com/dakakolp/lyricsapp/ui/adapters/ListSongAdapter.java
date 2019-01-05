@@ -9,20 +9,20 @@ import android.view.LayoutInflater;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.dakakolp.lyricsapp.R;
-import com.dakakolp.lyricsapp.html.modelshttp.Song;
+import com.dakakolp.lyricsapp.html.modelshttp.Album;
 import com.dakakolp.lyricsapp.ui.adapters.listeners.OnClickSongListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 public class ListSongAdapter extends RecyclerView.Adapter<ListSongAdapter.ListSongViewHolder> {
 
-    private List<Song> mSongList;
+    private List<Album> mSongList;
     private OnClickSongListener mListener;
     private View mView;
 
-    public ListSongAdapter(List<Song> songList, OnClickSongListener listener) {
+    public ListSongAdapter(List<Album> songList, OnClickSongListener listener) {
         mSongList = songList;
         mListener = listener;
     }
@@ -39,10 +39,10 @@ public class ListSongAdapter extends RecyclerView.Adapter<ListSongAdapter.ListSo
     @Override
     public void onBindViewHolder(@NonNull ListSongViewHolder listSongViewHolder, int i) {
 
-        Song song = mSongList.get(i);
+        Album song = mSongList.get(i);
 
-        Glide
-                .with(mView)
+        Picasso
+                .get()
                 .load(song.getImage())
                 .into(listSongViewHolder.mImageSong);
 
@@ -67,7 +67,7 @@ public class ListSongAdapter extends RecyclerView.Adapter<ListSongAdapter.ListSo
             super(itemView);
             mImageSong = itemView.findViewById(R.id.song_image);
             mSinger = itemView.findViewById(R.id.singer_name);
-            mSongTitle = itemView.findViewById(R.id.song_title);
+            mSongTitle = itemView.findViewById(R.id.album_title);
             mCardSong = itemView.findViewById(R.id.song_card);
 
             mCardSong.setOnClickListener(new View.OnClickListener() {
