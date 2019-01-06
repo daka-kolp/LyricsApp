@@ -20,7 +20,7 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
     public static final String LINK_TO_LYRIC = "link to lyric";
     public static final String TITLE_SONG = "title song";
 
-    private int mPage = 1;
+    private int mPage;
 
     private EditText mEditTextSearch;
     private ImageButton mImageButtonSearch;
@@ -28,7 +28,7 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
     private ImageButton mImageButtonNext;
     private ProgressBar mProgressBar;
 
-    private String searchString;
+    private String mSearchString;
 
 
     @Override
@@ -51,14 +51,9 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
             @Override
             public void onClick(View v) {
 //                mImageButtonNext.setVisibility(View.VISIBLE);
-
-                searchString = mEditTextSearch.getText().toString();
-                SongFragment fragment = SongFragment.newInstance(1, searchString);
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.song_list_fragment, fragment)
-                        .addToBackStack(null)
-                        .commit();
+                mPage = 1;
+                mSearchString = mEditTextSearch.getText().toString();
+                uploadFragment(mPage, mSearchString);
                 closeKeyboard();
             }
         });
@@ -72,12 +67,7 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
                 } else {
                     mImageButtonBefore.setVisibility(View.GONE);
                 }*/
-                SongFragment fragment = SongFragment.newInstance(mPage, searchString);
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.song_list_fragment, fragment)
-                        .addToBackStack(null)
-                        .commit();
+                uploadFragment(mPage, mSearchString);
             }
         });
 
@@ -95,22 +85,19 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
                 } else {
                     mImageButtonBefore.setVisibility(View.GONE);
                 }*/
-                SongFragment fragment = SongFragment.newInstance(mPage, searchString);
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.song_list_fragment, fragment)
-                        .addToBackStack(null)
-                        .commit();
+                uploadFragment(mPage, mSearchString);
             }
         });
     }
 
-
-/*    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }*/
+    private void uploadFragment(int page, String searchString) {
+        SongFragment fragment = SongFragment.newInstance(page, searchString);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.song_list_fragment, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
 
     private void closeKeyboard() {
         InputMethodManager inputMethodManager = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
@@ -122,6 +109,12 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
             inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+
+/*    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }*/
 
     //  implementation SongFragment.OnSongListFragmentInteractionListener
     @Override
