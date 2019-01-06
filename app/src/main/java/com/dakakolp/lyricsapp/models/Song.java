@@ -29,4 +29,13 @@ public class Song {
     public void setLink(String link) {
         mLink = link;
     }
+
+    @Override
+    public String toString() {
+        return "Song{" +
+                "mSinger='" + mSinger + '\'' +
+                ", mSongTitle='" + mSongTitle + '\'' +
+                ", mLink='" + mLink + '\'' +
+                '}';
+    }
 }

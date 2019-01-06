@@ -11,40 +11,34 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.dakakolp.lyricsapp.R;
-import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.asynctasks.ParseSongTask;
+import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
 
-
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 
-public class SongFragment extends Fragment {
+public class SongFragment extends Fragment implements ParseSongTask.ParseSongListener, ListSongAdapter.OnClickSongListener {
     private static final String PAGE_NUMBER = "page number";
     private static final String SEARCH_SONG = "search song";
 
     private int mPageNumber;
     private String mSearchSong;
-
     private List<Song> mSongs;
 
     private Context mContext;
+    private RecyclerView mRecyclerView;
+
+    public interface OnSongListFragmentInteractionListener {
+        void onOpenLyric(Song song);
+    }
 
     private OnSongListFragmentInteractionListener mListener;
-    private ListSongAdapter.OnClickSongListener mClickSongListener = new ListSongAdapter.OnClickSongListener() {
-        @Override
-        public void onClickSong(int position) {
-            if (mListener != null)
-                mListener.onOpenLyric(mSongs.get(position));
-        }
-    };
+
     public SongFragment() {
         // Required empty public constructor
     }
-    
+
     public static SongFragment newInstance(int page, String song) {
         SongFragment fragment = new SongFragment();
         Bundle args = new Bundle();
@@ -61,17 +55,7 @@ public class SongFragment extends Fragment {
             mPageNumber = getArguments().getInt(PAGE_NUMBER);
             mSearchSong = getArguments().getString(SEARCH_SONG);
         }
-        ParseSongTask asyncTask = new ParseSongTask(mPageNumber);
-        // TODO: handle exceptions
-        try {
-            mSongs = asyncTask.execute(mSearchSong).get(3, TimeUnit.SECONDS);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        }
+        new ParseSongTask(mPageNumber, this).execute(mSearchSong);
     }
 
     @Override
@@ -79,12 +63,9 @@ public class SongFragment extends Fragment {
                              Bundle savedInstanceState) {
         View viewContainer = inflater.inflate(R.layout.fragment_song, container, false);
 
-        RecyclerView recyclerViewSongs = viewContainer.findViewById(R.id.recycler_view_songs);
+        mRecyclerView = viewContainer.findViewById(R.id.recycler_view_songs);
         LinearLayoutManager gridLayoutManager = new LinearLayoutManager(mContext);
-        recyclerViewSongs.setLayoutManager(gridLayoutManager);
-
-        ListSongAdapter songAdapter = new ListSongAdapter(mSongs, mClickSongListener);
-        recyclerViewSongs.setAdapter(songAdapter);
+        mRecyclerView.setLayoutManager(gridLayoutManager);
 
         return viewContainer;
     }
@@ -107,7 +88,31 @@ public class SongFragment extends Fragment {
         mListener = null;
     }
 
-    public interface OnSongListFragmentInteractionListener {
-        void onOpenLyric(Song song);
+    //  implementation ParseSongTask.ParseSongListener
+    @Override
+    public void initProgressBar() {
+
+    }
+
+    @Override
+    public void updateProgressBar() {
+
+    }
+
+    @Override
+    public void getFinalResult(List<Song> songs) {
+        if (songs.isEmpty()) {
+            return;
+        }
+        mSongs = songs;
+        ListSongAdapter adapter = new ListSongAdapter(mSongs, this);
+        mRecyclerView.setAdapter(adapter);
+    }
+
+    //  implementation ListSongAdapter.OnClickSongListener
+    @Override
+    public void onClickSong(int position) {
+        if (mListener != null)
+            mListener.onOpenLyric(mSongs.get(position));
     }
 }

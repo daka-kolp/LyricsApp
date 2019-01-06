@@ -1,6 +1,7 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.dakakolp.lyricsapp.models.Song;
 
@@ -21,9 +22,16 @@ public class ParseSongTask extends AsyncTask <String, Void, List<Song>>{
     private static final String SEARCH_SONGS = "&w=songs&p="; // + number of page
 
     private int mPage;
+    private ParseSongListener mListener;
 
-    public ParseSongTask(int page) {
+    public ParseSongTask(int page, ParseSongListener listener) {
         mPage = page;
+        mListener = listener;
+    }
+
+    @Override
+    protected void onPreExecute() {
+        mListener.initProgressBar();
     }
 
     @Override
@@ -47,5 +55,23 @@ public class ParseSongTask extends AsyncTask <String, Void, List<Song>>{
             e.printStackTrace();
         }
         return songs;
+    }
+
+    @Override
+    protected void onProgressUpdate(Void... values) {
+        mListener.updateProgressBar();
+    }
+
+    @Override
+    protected void onPostExecute(List<Song> songs) {
+        mListener.getFinalResult(songs);
+    }
+
+    public interface ParseSongListener {
+        void initProgressBar();
+
+        void updateProgressBar();
+
+        void getFinalResult(List<Song> songs);
     }
 }

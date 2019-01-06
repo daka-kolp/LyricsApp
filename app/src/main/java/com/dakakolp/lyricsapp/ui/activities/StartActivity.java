@@ -1,17 +1,21 @@
 package com.dakakolp.lyricsapp.ui.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.fragments.SongFragment;
+import com.dakakolp.lyricsapp.utils.NetworkUtil;
 
 public class StartActivity extends AppCompatActivity implements SongFragment.OnSongListFragmentInteractionListener {
 
@@ -53,18 +57,19 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
                         .replace(R.id.song_list_fragment, fragment)
                         .addToBackStack(null)
                         .commit();
+                closeKeyboard();
             }
         });
 
         mImageButtonBefore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                if(mPage != 1) {
-//                    mPage--;
-//                    mImageButtonBefore.setVisibility(View.VISIBLE);
-//                } else {
-//                    mImageButtonBefore.setVisibility(View.GONE);
-//                }
+/*                if(mPage != 1) {
+                    mPage--;
+                    mImageButtonBefore.setVisibility(View.VISIBLE);
+                } else {
+                    mImageButtonBefore.setVisibility(View.GONE);
+                }*/
                 SongFragment fragment = SongFragment.newInstance(mPage, searchString);
                 getSupportFragmentManager()
                         .beginTransaction()
@@ -77,17 +82,17 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
         mImageButtonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                if(mPage >= 1 && mPage <= 50) {
-//                    mPage++;
-//                    mImageButtonNext.setVisibility(View.VISIBLE);
-//                } else {
-//                    mImageButtonNext.setVisibility(View.GONE);
-//                }
-//                if (mPage > 1){
-//                    mImageButtonBefore.setVisibility(View.VISIBLE);
-//                } else {
-//                    mImageButtonBefore.setVisibility(View.GONE);
-//                }
+/*                if(mPage >= 1 && mPage <= 50) {
+                    mPage++;
+                    mImageButtonNext.setVisibility(View.VISIBLE);
+                } else {
+                    mImageButtonNext.setVisibility(View.GONE);
+                }
+                if (mPage > 1){
+                    mImageButtonBefore.setVisibility(View.VISIBLE);
+                } else {
+                    mImageButtonBefore.setVisibility(View.GONE);
+                }*/
                 SongFragment fragment = SongFragment.newInstance(mPage, searchString);
                 getSupportFragmentManager()
                         .beginTransaction()
@@ -97,14 +102,30 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
             }
         });
 
+        if (!(NetworkUtil.isOnline(this))) {
+            Toast.makeText(this, "No internet access", Toast.LENGTH_SHORT).show();
+        }
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.main_menu, menu);
-//        return super.onCreateOptionsMenu(menu);
-//    }
 
+/*    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }*/
+
+    private void closeKeyboard() {
+        InputMethodManager inputMethodManager = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        View view = this.getCurrentFocus();
+        if (view == null) {
+            view = new View(this);
+        }
+        if (inputMethodManager != null) {
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+//  implementation SongFragment.OnSongListFragmentInteractionListener
     @Override
     public void onOpenLyric(Song song) {
         Intent intent = new Intent(StartActivity.this, LyricActivity.class);
