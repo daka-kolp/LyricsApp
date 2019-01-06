@@ -1,7 +1,6 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.dakakolp.lyricsapp.models.Song;
 

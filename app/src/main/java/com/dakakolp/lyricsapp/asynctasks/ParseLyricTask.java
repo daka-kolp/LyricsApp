@@ -1,7 +1,6 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -40,7 +39,6 @@ public class ParseLyricTask extends AsyncTask<String, Void, String> {
                     .html().replaceAll("<br>", "")
                     .replace("<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->", "");
         } catch (IOException ex) {
-            Log.d("qwerty", "doInBackground: " + textSong);
             ex.printStackTrace();
         }
         return textSong;
