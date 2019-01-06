@@ -21,6 +21,7 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
     public static final String TITLE_SONG = "title song";
 
     private int mPage;
+    private String mSearchString;
 
     private EditText mEditTextSearch;
     private ImageButton mImageButtonSearch;
@@ -28,7 +29,6 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
     private ImageButton mImageButtonNext;
     private ProgressBar mProgressBar;
 
-    private String mSearchString;
 
 
     @Override
@@ -95,7 +95,6 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.song_list_fragment, fragment)
-                .addToBackStack(null)
                 .commit();
     }
 
