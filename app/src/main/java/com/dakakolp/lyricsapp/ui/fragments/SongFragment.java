@@ -9,11 +9,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.asynctasks.ParseSongTask;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
+import com.dakakolp.lyricsapp.utils.NetworkUtil;
 
 import java.util.List;
 
@@ -31,6 +33,8 @@ public class SongFragment extends Fragment implements ParseSongTask.ParseSongLis
 
     public interface OnSongListFragmentInteractionListener {
         void onOpenLyric(Song song);
+        void showProgressBar();
+        void hideProgressBar();
     }
 
     private OnSongListFragmentInteractionListener mListener;
@@ -91,7 +95,11 @@ public class SongFragment extends Fragment implements ParseSongTask.ParseSongLis
     //  implementation ParseSongTask.ParseSongListener
     @Override
     public void initProgressBar() {
-
+        if (!(NetworkUtil.isOnline(mContext))) {
+            Toast.makeText(mContext, "No internet access", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mListener.showProgressBar();
     }
 
     @Override
@@ -101,6 +109,7 @@ public class SongFragment extends Fragment implements ParseSongTask.ParseSongLis
 
     @Override
     public void getFinalResult(List<Song> songs) {
+        mListener.hideProgressBar();
         if (songs.isEmpty()) {
             return;
         }

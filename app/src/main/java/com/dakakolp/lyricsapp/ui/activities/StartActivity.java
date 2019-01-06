@@ -5,17 +5,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Toast;
+import android.widget.ProgressBar;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.fragments.SongFragment;
-import com.dakakolp.lyricsapp.utils.NetworkUtil;
 
 public class StartActivity extends AppCompatActivity implements SongFragment.OnSongListFragmentInteractionListener {
 
@@ -28,6 +26,7 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
     private ImageButton mImageButtonSearch;
     private ImageButton mImageButtonBefore;
     private ImageButton mImageButtonNext;
+    private ProgressBar mProgressBar;
 
     private String searchString;
 
@@ -42,14 +41,17 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
         mImageButtonSearch = findViewById(R.id.image_button_search);
         mImageButtonBefore = findViewById(R.id.image_button_before);
         mImageButtonNext = findViewById(R.id.image_button_next);
+        mProgressBar = findViewById(R.id.progress_loading_songs);
 
         mImageButtonBefore.setVisibility(View.GONE);
         mImageButtonNext.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.GONE);
 
         mImageButtonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //                mImageButtonNext.setVisibility(View.VISIBLE);
+
                 searchString = mEditTextSearch.getText().toString();
                 SongFragment fragment = SongFragment.newInstance(1, searchString);
                 getSupportFragmentManager()
@@ -101,10 +103,6 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
                         .commit();
             }
         });
-
-        if (!(NetworkUtil.isOnline(this))) {
-            Toast.makeText(this, "No internet access", Toast.LENGTH_SHORT).show();
-        }
     }
 
 
@@ -125,12 +123,22 @@ public class StartActivity extends AppCompatActivity implements SongFragment.OnS
         }
     }
 
-//  implementation SongFragment.OnSongListFragmentInteractionListener
+    //  implementation SongFragment.OnSongListFragmentInteractionListener
     @Override
     public void onOpenLyric(Song song) {
         Intent intent = new Intent(StartActivity.this, LyricActivity.class);
         intent.putExtra(TITLE_SONG, song.getSongTitle());
         intent.putExtra(LINK_TO_LYRIC, song.getLink());
         startActivity(intent);
+    }
+
+    @Override
+    public void showProgressBar() {
+        mProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideProgressBar() {
+        mProgressBar.setVisibility(View.GONE);
     }
 }
