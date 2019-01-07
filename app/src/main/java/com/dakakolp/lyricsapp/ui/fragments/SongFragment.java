@@ -20,8 +20,7 @@ import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
 
 import java.util.List;
 
-
-public class SongFragment extends Fragment implements
+public class SongFragment extends BaseFragment implements
         TaskListener<List<Song>>,
         ListSongAdapter.OnClickSongListener {
     private static final String PAGE_NUMBER = "page number";
