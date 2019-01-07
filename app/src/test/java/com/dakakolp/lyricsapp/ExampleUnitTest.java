@@ -29,7 +29,7 @@ public class ExampleUnitTest {
     }
 
     @Test
-    public void link_Songs(){
+    public void linkSongs(){
 
         String USER_AGENT = "User-agent";
         String LINK_SEARCH = "https://search.azlyrics.com/search.php?q=";// + str query for song
@@ -63,13 +63,18 @@ public class ExampleUnitTest {
         String textSong = null;
         try {
             Document document = Jsoup
-                    .connect("https://www.azlyrics.com/lyrics/queen/wewillrockyou.html")
+                    .connect("https://www.azlyrics.com/lyrics/selenagomez/goodforyou.html")
                     .header("User-agent", USER_AGENT_STRING)
                     .get();
 
             Elements elements = document.getElementsByClass("col-xs-12 col-lg-8 text-center");
+            int indexOfLyric = 7;
+            if(elements.get(0).children().get(indexOfLyric).html().isEmpty())
+            {
+                indexOfLyric = 9;
+            }
             textSong = elements.get(0)
-                    .children().get(7)
+                    .children().get(indexOfLyric)
                     .html().replaceAll("<br>", "")
                     .replace("<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->", "");
             System.out.println(textSong);

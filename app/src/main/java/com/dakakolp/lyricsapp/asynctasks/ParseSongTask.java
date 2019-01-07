@@ -1,45 +1,34 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
-import android.os.AsyncTask;
-
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
+import com.dakakolp.lyricsapp.asynctasks.resultmodels.ParseResult;
 import com.dakakolp.lyricsapp.models.Song;
+import com.dakakolp.lyricsapp.utils.NetworkUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ParseSongTask extends AsyncTask <String, Void, List<Song>>{
-    private static final String USER_AGENT_STRING = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4)" +
-            " AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12";
-    private static final String USER_AGENT = "User-agent";
-    private static final String LINK_SEARCH = "https://search.azlyrics.com/search.php?q=";// + str query for song
-    private static final String SEARCH_SONGS = "&w=songs&p="; // + number of page
-
+public class ParseSongTask extends BaseAsyncTask<ParseResult<List<Song>>> {
     private int mPage;
-    private ParseSongListener mListener;
 
-    public ParseSongTask(int page, ParseSongListener listener) {
+    public ParseSongTask(int page, ParseListener<ParseResult<List<Song>>> listener) {
+        super(listener);
         mPage = page;
-        mListener = listener;
     }
 
     @Override
-    protected void onPreExecute() {
-        mListener.initProgressBar();
-    }
-
-    @Override
-    protected List<Song> doInBackground(String... strings) {
+    protected ParseResult<List<Song>> doInBackground(String... strings) {
+        ParseResult <List<Song>> result = new ParseResult<>();
         List<Song> songs = new ArrayList<>();
         try {
             Document mainDocument = Jsoup
-                    .connect(LINK_SEARCH + strings[0] + SEARCH_SONGS + mPage)
-                    .header(USER_AGENT, USER_AGENT_STRING)
+                    .connect(NetworkUtil.LINK_SEARCH + strings[0] + NetworkUtil.SEARCH_SONGS + mPage)
+                    .header(NetworkUtil.USER_AGENT, NetworkUtil.USER_AGENT_STRING)
                     .get();
             Elements elements = mainDocument.getElementsByClass("text-left visitedlyr");
             for (Element element : elements) {
@@ -50,27 +39,11 @@ public class ParseSongTask extends AsyncTask <String, Void, List<Song>>{
                 song.setLink(element.select("a[href]").first().attr("href"));
                 songs.add(song);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            result.setError(e.getLocalizedMessage());
         }
-        return songs;
-    }
-
-    @Override
-    protected void onProgressUpdate(Void... values) {
-        mListener.updateProgressBar();
-    }
-
-    @Override
-    protected void onPostExecute(List<Song> songs) {
-        mListener.getFinalResult(songs);
-    }
-
-    public interface ParseSongListener {
-        void initProgressBar();
-
-        void updateProgressBar();
-
-        void getFinalResult(List<Song> songs);
+        result.setResult(songs);
+        return result;
     }
 }

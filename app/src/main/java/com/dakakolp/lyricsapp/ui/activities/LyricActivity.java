@@ -11,8 +11,11 @@ import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.asynctasks.ParseLyricTask;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
+import com.dakakolp.lyricsapp.asynctasks.resultmodels.ParseResult;
 
-public class LyricActivity extends AppCompatActivity implements ParseLyricTask.ParseLyricListener {
+public class LyricActivity extends AppCompatActivity implements
+        ParseListener<ParseResult<String>> {
 
     private ProgressBar mProgressBar;
 
@@ -40,29 +43,21 @@ public class LyricActivity extends AppCompatActivity implements ParseLyricTask.P
         new ParseLyricTask(this).execute(link);
     }
 
-//  implementation ParseLyricTask.ParseLyricListener
+//  implementation ParseCallback
     @Override
-    public void showProgressBar() {
+    public void initProgressBar() {
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
-    public void updateProgressBar() {
-
-    }
-
-    @Override
-    public void getFinalResult(String textSong) {
+    public void getFinalResult(ParseResult<String> textSong) {
         mProgressBar.setVisibility(View.GONE);
-        if(textSong == null) {
-            Toast.makeText(this, "No internet access ", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if(textSong.isEmpty()) {
-            Toast.makeText(this, "No access to lyric", Toast.LENGTH_SHORT).show();
+        if(textSong.getError() != null) {
+            Toast.makeText(this, textSong.getError(), Toast.LENGTH_SHORT).show();
             return;
         }
         TextView textViewLyric = findViewById(R.id.textview_lyric);
-        textViewLyric.setText(textSong);
+        textViewLyric.setText(textSong.getResult());
     }
+
 }

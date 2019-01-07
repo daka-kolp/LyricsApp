@@ -1,66 +1,46 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
-import android.os.AsyncTask;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
+import com.dakakolp.lyricsapp.asynctasks.resultmodels.ParseResult;
+import com.dakakolp.lyricsapp.utils.NetworkUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
+public class ParseLyricTask extends BaseAsyncTask<ParseResult<String>> {
 
-public class ParseLyricTask extends AsyncTask<String, Void, String> {
-    private static final String USER_AGENT_STRING = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4)" +
-            " AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12";
-    private static final String USER_AGENT = "User-agent";
-
-    private ParseLyricListener mListener;
-
-    public ParseLyricTask(ParseLyricListener listener) {
-        mListener = listener;
+    public ParseLyricTask(ParseListener<ParseResult<String>> listener) {
+        super(listener);
     }
 
     @Override
-    protected void onPreExecute() {
-        mListener.showProgressBar();
-    }
-
-    @Override
-    protected String doInBackground(String... strings) {
+    protected ParseResult<String> doInBackground(String... strings) {
+        ParseResult<String> result = new ParseResult<>();
         String textSong = null;
         try {
             Document document = Jsoup
                     .connect(strings[0])
-                    .header(USER_AGENT, USER_AGENT_STRING)
+                    .header(NetworkUtil.USER_AGENT, NetworkUtil.USER_AGENT_STRING)
                     .get();
 
             Elements elements = document.getElementsByClass("col-xs-12 col-lg-8 text-center");
+            int indexOfLyric = 7;
+            if(elements.get(0).children().get(indexOfLyric).html().isEmpty())
+            {
+                indexOfLyric = 9;
+            }
             textSong = elements.get(0)
-                    .children().get(7)
+                    .children().get(indexOfLyric)
                     .html().replaceAll("<br>", "")
                     .replace("<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->", "");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
+            result.setError(ex.getMessage());
         }
-        return textSong;
+        result.setResult(textSong);
+        return result;
     }
 
-    @Override
-    protected void onProgressUpdate(Void... values) {
-        mListener.updateProgressBar();
-    }
 
-    @Override
-    protected void onPostExecute(String s) {
-        if (mListener != null)
-            mListener.getFinalResult(s);
-    }
-
-    public interface ParseLyricListener {
-        void showProgressBar();
-
-        void updateProgressBar();
-
-        void getFinalResult(String textSong);
-
-    }
 }

@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.asynctasks.ParseSongTask;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
+import com.dakakolp.lyricsapp.asynctasks.resultmodels.ParseResult;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
 import com.dakakolp.lyricsapp.utils.NetworkUtil;
@@ -20,7 +22,9 @@ import com.dakakolp.lyricsapp.utils.NetworkUtil;
 import java.util.List;
 
 
-public class SongFragment extends Fragment implements ParseSongTask.ParseSongListener, ListSongAdapter.OnClickSongListener {
+public class SongFragment extends Fragment implements
+        ParseListener<ParseResult<List<Song>>>,
+        ListSongAdapter.OnClickSongListener {
     private static final String PAGE_NUMBER = "page number";
     private static final String SEARCH_SONG = "search song";
 
@@ -92,7 +96,7 @@ public class SongFragment extends Fragment implements ParseSongTask.ParseSongLis
         mListener = null;
     }
 
-    //  implementation ParseSongTask.ParseSongListener
+    //  implementation ParseCallback
     @Override
     public void initProgressBar() {
         if (!(NetworkUtil.isOnline(mContext))) {
@@ -103,20 +107,17 @@ public class SongFragment extends Fragment implements ParseSongTask.ParseSongLis
     }
 
     @Override
-    public void updateProgressBar() {
-
-    }
-
-    @Override
-    public void getFinalResult(List<Song> songs) {
+    public void getFinalResult(ParseResult<List<Song>> songs) {
         mListener.hideProgressBar();
-        if (songs.isEmpty()) {
+        if (songs.getError() != null) {
+            Toast.makeText(mContext, songs.getError(), Toast.LENGTH_SHORT).show();
             return;
         }
-        mSongs = songs;
+        mSongs = songs.getResult();
         ListSongAdapter adapter = new ListSongAdapter(mSongs, this);
         mRecyclerView.setAdapter(adapter);
     }
+
 
     //  implementation ListSongAdapter.OnClickSongListener
     @Override

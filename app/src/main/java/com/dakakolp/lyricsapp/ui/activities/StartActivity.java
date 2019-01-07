@@ -15,7 +15,8 @@ import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.fragments.SongFragment;
 
-public class StartActivity extends AppCompatActivity implements SongFragment.OnSongListFragmentInteractionListener {
+public class StartActivity extends AppCompatActivity implements
+        SongFragment.OnSongListFragmentInteractionListener {
 
     public static final String LINK_TO_LYRIC = "link to lyric";
     public static final String TITLE_SONG = "title song";
