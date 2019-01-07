@@ -11,11 +11,11 @@ import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.asynctasks.ParseLyricTask;
-import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
-import com.dakakolp.lyricsapp.asynctasks.resultmodels.ParseResult;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 
 public class LyricActivity extends AppCompatActivity implements
-        ParseListener<ParseResult<String>> {
+        TaskListener<String> {
 
     private ProgressBar mProgressBar;
 
@@ -43,14 +43,14 @@ public class LyricActivity extends AppCompatActivity implements
         new ParseLyricTask(this).execute(link);
     }
 
-//  implementation ParseCallback
+//  implementation TaskListener
     @Override
     public void initProgressBar() {
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
-    public void getFinalResult(ParseResult<String> textSong) {
+    public void getFinalResult(TaskRequest<String> textSong) {
         mProgressBar.setVisibility(View.GONE);
         if(textSong.getError() != null) {
             Toast.makeText(this, textSong.getError(), Toast.LENGTH_SHORT).show();

@@ -1,27 +1,29 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
-import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
-import com.dakakolp.lyricsapp.asynctasks.resultmodels.ParseResult;
-import com.dakakolp.lyricsapp.utils.NetworkUtil;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
+import com.dakakolp.lyricsapp.utils.ParserHelper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-public class ParseLyricTask extends BaseAsyncTask<ParseResult<String>> {
+import java.io.IOException;
 
-    public ParseLyricTask(ParseListener<ParseResult<String>> listener) {
+public class ParseLyricTask extends BaseAsyncTask<String> {
+
+    public ParseLyricTask(TaskListener<String> listener) {
         super(listener);
     }
 
     @Override
-    protected ParseResult<String> doInBackground(String... strings) {
-        ParseResult<String> result = new ParseResult<>();
-        String textSong = null;
+    protected TaskRequest<String> doInBackground(String... strings) {
+        TaskRequest<String> request = new TaskRequest<>();
+        String textSong;
         try {
             Document document = Jsoup
                     .connect(strings[0])
-                    .header(NetworkUtil.USER_AGENT, NetworkUtil.USER_AGENT_STRING)
+                    .header(ParserHelper.USER_AGENT, ParserHelper.USER_AGENT_STRING)
                     .get();
 
             Elements elements = document.getElementsByClass("col-xs-12 col-lg-8 text-center");
@@ -34,13 +36,15 @@ public class ParseLyricTask extends BaseAsyncTask<ParseResult<String>> {
                     .children().get(indexOfLyric)
                     .html().replaceAll("<br>", "")
                     .replace("<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->", "");
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
-            result.setError(ex.getMessage());
+            request.setError("Error, check connection...");
+            return request;
+        } catch (Exception e) {
+            request.setError("An unknown error...");
+            return request;
         }
-        result.setResult(textSong);
-        return result;
+        request.setResult(textSong);
+        return request;
     }
-
-
 }

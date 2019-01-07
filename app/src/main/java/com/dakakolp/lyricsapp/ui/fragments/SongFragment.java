@@ -13,33 +13,27 @@ import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.asynctasks.ParseSongTask;
-import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
-import com.dakakolp.lyricsapp.asynctasks.resultmodels.ParseResult;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
-import com.dakakolp.lyricsapp.utils.NetworkUtil;
 
 import java.util.List;
 
 
 public class SongFragment extends Fragment implements
-        ParseListener<ParseResult<List<Song>>>,
+        TaskListener<List<Song>>,
         ListSongAdapter.OnClickSongListener {
     private static final String PAGE_NUMBER = "page number";
     private static final String SEARCH_SONG = "search song";
 
     private int mPageNumber;
     private String mSearchSong;
+
     private List<Song> mSongs;
 
     private Context mContext;
     private RecyclerView mRecyclerView;
-
-    public interface OnSongListFragmentInteractionListener {
-        void onOpenLyric(Song song);
-        void showProgressBar();
-        void hideProgressBar();
-    }
 
     private OnSongListFragmentInteractionListener mListener;
 
@@ -96,18 +90,14 @@ public class SongFragment extends Fragment implements
         mListener = null;
     }
 
-    //  implementation ParseCallback
+    //  implementation TaskListener
     @Override
     public void initProgressBar() {
-        if (!(NetworkUtil.isOnline(mContext))) {
-            Toast.makeText(mContext, "No internet access", Toast.LENGTH_SHORT).show();
-            return;
-        }
         mListener.showProgressBar();
     }
 
     @Override
-    public void getFinalResult(ParseResult<List<Song>> songs) {
+    public void getFinalResult(TaskRequest<List<Song>> songs) {
         mListener.hideProgressBar();
         if (songs.getError() != null) {
             Toast.makeText(mContext, songs.getError(), Toast.LENGTH_SHORT).show();
@@ -124,5 +114,13 @@ public class SongFragment extends Fragment implements
     public void onClickSong(int position) {
         if (mListener != null)
             mListener.onOpenLyric(mSongs.get(position));
+    }
+
+    public interface OnSongListFragmentInteractionListener {
+        void onOpenLyric(Song song);
+
+        void showProgressBar();
+
+        void hideProgressBar();
     }
 }

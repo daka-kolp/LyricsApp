@@ -2,13 +2,14 @@ package com.dakakolp.lyricsapp.asynctasks;
 
 import android.os.AsyncTask;
 
-import com.dakakolp.lyricsapp.asynctasks.asynclisteners.ParseListener;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 
-public abstract class BaseAsyncTask<T> extends AsyncTask<String, Void, T> {
+public abstract class BaseAsyncTask<T> extends AsyncTask<String, Void, TaskRequest<T>> {
 
-    private ParseListener<T> mListener;
+    private TaskListener<T> mListener;
 
-    protected BaseAsyncTask(ParseListener<T> listener) {
+    BaseAsyncTask(TaskListener<T> listener) {
         mListener = listener;
     }
 
@@ -18,7 +19,7 @@ public abstract class BaseAsyncTask<T> extends AsyncTask<String, Void, T> {
     }
 
     @Override
-    protected void onPostExecute(T t) {
+    protected void onPostExecute(TaskRequest<T> t) {
         if (mListener != null)
             mListener.getFinalResult(t);
     }

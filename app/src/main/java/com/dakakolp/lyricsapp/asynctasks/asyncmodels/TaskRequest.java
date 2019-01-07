@@ -1,6 +1,6 @@
-package com.dakakolp.lyricsapp.asynctasks.resultmodels;
+package com.dakakolp.lyricsapp.asynctasks.asyncmodels;
 
-public class ParseResult<T> {
+public class TaskRequest<T> {
 
     private String mError;
     private T mResult;
