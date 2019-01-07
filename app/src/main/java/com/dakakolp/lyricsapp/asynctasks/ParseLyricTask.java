@@ -41,7 +41,7 @@ public class ParseLyricTask extends BaseAsyncTask<String> {
             request.setError("Error, check connection...");
             return request;
         } catch (Exception e) {
-            request.setError("An unknown error...");
+            request.setError("An unknown exception...");
             return request;
         }
         request.setResult(textSong);

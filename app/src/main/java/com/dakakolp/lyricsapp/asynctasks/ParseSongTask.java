@@ -31,12 +31,16 @@ public class ParseSongTask extends BaseAsyncTask<List<Song>> {
                     .connect(ParserHelper.LINK_SEARCH + strings[0] + ParserHelper.SEARCH_SONGS + mPage)
                     .header(ParserHelper.USER_AGENT, ParserHelper.USER_AGENT_STRING)
                     .get();
+
             Elements elements = mainDocument.getElementsByClass("text-left visitedlyr");
             for (Element element : elements) {
                 List<String> songInfo = element.select("b").eachText();
                 Song song = new Song();
                 song.setSongTitle(songInfo.get(0));
-                song.setSinger(songInfo.get(1));
+                if (songInfo.size() == 2)
+                    song.setSinger(songInfo.get(1));
+                else
+                    song.setSinger("An unknown singer");
                 song.setLink(element.select("a[href]").first().attr("href"));
                 songs.add(song);
             }
@@ -45,7 +49,8 @@ public class ParseSongTask extends BaseAsyncTask<List<Song>> {
             request.setError("Error, check connection...");
             return request;
         } catch (Exception e) {
-            request.setError("An unknown error...");
+            e.printStackTrace();
+            request.setError("An unknown exception...");
             return request;
         }
         if (songs.isEmpty()) {
