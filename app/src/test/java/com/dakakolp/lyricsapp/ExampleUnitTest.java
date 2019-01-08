@@ -1,5 +1,6 @@
 package com.dakakolp.lyricsapp;
 
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.ListSong;
 import com.dakakolp.lyricsapp.models.Song;
 
 import org.jsoup.Jsoup;
@@ -82,4 +83,47 @@ public class ExampleUnitTest {
             ex.printStackTrace();
         }
     }
+
+    @Test
+    public void totalNumberSongs(){
+
+        String USER_AGENT = "User-agent";
+        String LINK_SEARCH = "https://search.azlyrics.com/search.php?q=";// + str query for song
+        String SEARCH_SONGS = "&w=songs&p="; // + number of page
+
+        int page = 1;
+        String string = "On My Own Three Days Grace";
+
+        try {
+            Document mainDocument = Jsoup
+                    .connect(LINK_SEARCH + string + SEARCH_SONGS + page)
+                    .header(USER_AGENT, USER_AGENT_STRING)
+                    .get();
+            Elements elements = mainDocument.getElementsByClass("panel-heading");
+            String str = null;
+            if(!elements.isEmpty()) {
+                Element element = elements.first();
+                str = element.select("small")
+                        .first()
+                        .text();
+                int startIndex = str.indexOf("of");
+                int endIndex = str.indexOf("total");
+                if (startIndex != -1 && endIndex != -1) {
+                    String resultCount = str.substring(startIndex + 2, endIndex);
+                    int count = Integer.parseInt(resultCount.trim());
+                    if (count > 0) {
+                        System.out.println(count);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void f(){
+        System.out.println(11%20);
+    }
+
 }

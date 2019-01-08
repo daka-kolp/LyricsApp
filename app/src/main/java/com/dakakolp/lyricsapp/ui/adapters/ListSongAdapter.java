@@ -18,9 +18,12 @@ public class ListSongAdapter extends RecyclerView.Adapter<ListSongAdapter.ListSo
     private List<Song> mSongList;
     private OnClickSongListener mListener;
 
-    public ListSongAdapter(List<Song> songList, OnClickSongListener listener) {
-        mSongList = songList;
+    public ListSongAdapter(OnClickSongListener listener) {
         mListener = listener;
+    }
+
+    public void setSongList(List<Song> songList) {
+        mSongList = songList;
     }
 
     @NonNull
@@ -42,6 +45,9 @@ public class ListSongAdapter extends RecyclerView.Adapter<ListSongAdapter.ListSo
 
     @Override
     public int getItemCount() {
+        if (mSongList == null) {
+            return 0;
+        }
         return mSongList.size();
     }
 
@@ -60,7 +66,9 @@ public class ListSongAdapter extends RecyclerView.Adapter<ListSongAdapter.ListSo
             mCardSong.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListener.onClickSong(getAdapterPosition());
+                    if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                        mListener.onClickSong(getAdapterPosition());
+                    }
                 }
             });
         }

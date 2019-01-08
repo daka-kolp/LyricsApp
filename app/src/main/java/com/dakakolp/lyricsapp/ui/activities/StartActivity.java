@@ -4,32 +4,48 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
+import com.dakakolp.lyricsapp.asynctasks.ParseSongTask;
+import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.ListSong;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 import com.dakakolp.lyricsapp.models.Song;
-import com.dakakolp.lyricsapp.ui.fragments.SongFragment;
+import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
+import com.dakakolp.lyricsapp.utils.ParserHelper;
+
+import java.util.List;
 
 public class StartActivity extends AppCompatActivity implements
-        SongFragment.OnSongListFragmentInteractionListener {
+        TaskListener<ListSong>,
+        ListSongAdapter.OnClickSongListener{
 
     public static final String LINK_TO_LYRIC = "link to lyric";
     public static final String TITLE_SONG = "title song";
+    private static int sNumberSongsOnPage = 20;
 
-    private int mPage;
+    private static int sPage = 0;
     private String mSearchString;
+
+    private int mNumberSongs;
+    private List<Song> mSongs;
 
     private EditText mEditTextSearch;
     private ImageButton mImageButtonSearch;
     private ImageButton mImageButtonBefore;
     private ImageButton mImageButtonNext;
     private ProgressBar mProgressBar;
-
+    private RecyclerView mRecyclerView;
+    private ListSongAdapter mAdapter;
 
 
     @Override
@@ -38,23 +54,22 @@ public class StartActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_start);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        mEditTextSearch = findViewById(R.id.edittext_search);
-        mImageButtonSearch = findViewById(R.id.image_button_search);
-        mImageButtonBefore = findViewById(R.id.image_button_before);
-        mImageButtonNext = findViewById(R.id.image_button_next);
-        mProgressBar = findViewById(R.id.progress_loading_songs);
 
-        mImageButtonBefore.setVisibility(View.GONE);
-        mImageButtonNext.setVisibility(View.GONE);
+        initViews();
+
         mProgressBar.setVisibility(View.GONE);
 
         mImageButtonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                mImageButtonNext.setVisibility(View.VISIBLE);
-                mPage = 1;
+                if(!ParserHelper.isOnline(StartActivity.this)){
+                    showToastError();
+                    return;
+                }
+                mImageButtonNext.setVisibility(View.VISIBLE);
+                sPage = 1;
                 mSearchString = mEditTextSearch.getText().toString();
-                uploadFragment(mPage, mSearchString);
+                uploadSongList(sPage, mSearchString);
                 closeKeyboard();
             }
         });
@@ -62,41 +77,63 @@ public class StartActivity extends AppCompatActivity implements
         mImageButtonBefore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-/*                if(mPage != 1) {
-                    mPage--;
-                    mImageButtonBefore.setVisibility(View.VISIBLE);
+                if(!ParserHelper.isOnline(StartActivity.this)){
+                    showToastError();
+                    return;
+                }
+                if(sPage > 1) {
+                    sPage--;
+                    uploadSongList(sPage, mSearchString);
                 } else {
-                    mImageButtonBefore.setVisibility(View.GONE);
-                }*/
-                uploadFragment(mPage, mSearchString);
+                    showToast();
+                }
             }
         });
 
         mImageButtonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-/*                if(mPage >= 1 && mPage <= 50) {
-                    mPage++;
-                    mImageButtonNext.setVisibility(View.VISIBLE);
-                } else {
-                    mImageButtonNext.setVisibility(View.GONE);
+                if(!ParserHelper.isOnline(StartActivity.this)){
+                    showToastError();
+                    return;
                 }
-                if (mPage > 1){
-                    mImageButtonBefore.setVisibility(View.VISIBLE);
+                int pages = mNumberSongs/sNumberSongsOnPage;
+                if(mNumberSongs >= sNumberSongsOnPage && mNumberSongs%sNumberSongsOnPage > 0)
+                    pages++;
+                if(sPage >= 1 && sPage < pages) {
+                    sPage++;
+                    uploadSongList(sPage, mSearchString);
                 } else {
-                    mImageButtonBefore.setVisibility(View.GONE);
-                }*/
-                uploadFragment(mPage, mSearchString);
+                    showToast();
+                }
             }
         });
     }
 
-    private void uploadFragment(int page, String searchString) {
-        SongFragment fragment = SongFragment.newInstance(page, searchString);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.song_list_fragment, fragment)
-                .commit();
+    private void showToast() {
+        Toast.makeText(StartActivity.this, "out",Toast.LENGTH_SHORT).show();
+    }
+
+    private void showToastError() {
+        Toast.makeText(StartActivity.this, "Error, check connection",Toast.LENGTH_SHORT).show();
+    }
+
+    private void initViews() {
+        mEditTextSearch = findViewById(R.id.edittext_search);
+        mImageButtonSearch = findViewById(R.id.image_button_search);
+        mImageButtonBefore = findViewById(R.id.image_button_before);
+        mImageButtonNext = findViewById(R.id.image_button_next);
+        mProgressBar = findViewById(R.id.progress_loading_songs);
+
+        mRecyclerView = findViewById(R.id.recycler_view_songs);
+        LinearLayoutManager gridLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(gridLayoutManager);
+        mAdapter = new ListSongAdapter(this);
+        mRecyclerView.setAdapter(mAdapter);
+    }
+
+    private void uploadSongList(int page, String searchString) {
+        new ParseSongTask(page, this).execute(searchString);
     }
 
     private void closeKeyboard() {
@@ -116,22 +153,36 @@ public class StartActivity extends AppCompatActivity implements
         return super.onCreateOptionsMenu(menu);
     }*/
 
-    //  implementation SongFragment.OnSongListFragmentInteractionListener
-    @Override
-    public void onOpenLyric(Song song) {
-        Intent intent = new Intent(StartActivity.this, LyricActivity.class);
-        intent.putExtra(TITLE_SONG, song.getSongTitle());
-        intent.putExtra(LINK_TO_LYRIC, song.getLink());
-        startActivity(intent);
-    }
 
+    //  implementation TaskListener
     @Override
-    public void showProgressBar() {
+    public void showProgress() {
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
-    public void hideProgressBar() {
+    public void hideProgress() {
         mProgressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onFinalResult(TaskRequest<ListSong> songs) {
+        if (songs.getError() != null) {
+            Toast.makeText(this, songs.getError(), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mNumberSongs = songs.getResult().getNumberSongs();
+        mSongs = songs.getResult().getSongs();
+        mAdapter.setSongList(mSongs);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    //  implementation ListSongAdapter.OnClickSongListener
+    @Override
+    public void onClickSong(int position) {
+        Intent intent = new Intent(StartActivity.this, LyricActivity.class);
+        intent.putExtra(TITLE_SONG, mSongs.get(position).getSongTitle());
+        intent.putExtra(LINK_TO_LYRIC, mSongs.get(position).getLink());
+        startActivity(intent);
     }
 }

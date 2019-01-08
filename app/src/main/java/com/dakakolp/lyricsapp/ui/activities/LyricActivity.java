@@ -17,6 +17,7 @@ import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 public class LyricActivity extends AppCompatActivity implements
         TaskListener<String> {
 
+    private  TextView mTextViewLyric;
     private ProgressBar mProgressBar;
 
     @Override
@@ -26,6 +27,7 @@ public class LyricActivity extends AppCompatActivity implements
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mTextViewLyric = findViewById(R.id.text_view_lyric);
         mProgressBar = findViewById(R.id.progress_loading_lyric);
         mProgressBar.setVisibility(View.GONE);
 
@@ -45,19 +47,22 @@ public class LyricActivity extends AppCompatActivity implements
 
 //  implementation TaskListener
     @Override
-    public void initProgressBar() {
+    public void showProgress() {
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
-    public void getFinalResult(TaskRequest<String> textSong) {
+    public void hideProgress() {
         mProgressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onFinalResult(TaskRequest<String> textSong) {
         if(textSong.getError() != null) {
             Toast.makeText(this, textSong.getError(), Toast.LENGTH_SHORT).show();
             return;
         }
-        TextView textViewLyric = findViewById(R.id.textview_lyric);
-        textViewLyric.setText(textSong.getResult());
+        mTextViewLyric.setText(textSong.getResult());
     }
 
 }

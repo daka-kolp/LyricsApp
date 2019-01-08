@@ -23,19 +23,10 @@ public class ParseLyricTask extends BaseAsyncTask<String> {
         try {
             Document document = Jsoup
                     .connect(strings[0])
-                    .header(ParserHelper.USER_AGENT, ParserHelper.USER_AGENT_STRING)
+                    .header(ParserHelper.USER_AGENT_KEY, ParserHelper.USER_AGENT_VALUE)
                     .get();
 
-            Elements elements = document.getElementsByClass("col-xs-12 col-lg-8 text-center");
-            int indexOfLyric = 7;
-            if(elements.get(0).children().get(indexOfLyric).html().isEmpty())
-            {
-                indexOfLyric = 9;
-            }
-            textSong = elements.get(0)
-                    .children().get(indexOfLyric)
-                    .html().replaceAll("<br>", "")
-                    .replace("<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->", "");
+            textSong = getLyric(document);
         } catch (IOException ex) {
             ex.printStackTrace();
             request.setError("Error, check connection...");
@@ -46,5 +37,17 @@ public class ParseLyricTask extends BaseAsyncTask<String> {
         }
         request.setResult(textSong);
         return request;
+    }
+
+    private String getLyric(Document document) {
+        Elements elements = document.getElementsByClass("col-xs-12 col-lg-8 text-center");
+        int indexOfLyric = 7;
+        if (elements.get(0).children().get(indexOfLyric).html().isEmpty()) {
+            indexOfLyric = 9;
+        }
+        return elements.get(0)
+                .children().get(indexOfLyric)
+                .html().replaceAll("<br>", "")
+                .replace("<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->", "");
     }
 }
