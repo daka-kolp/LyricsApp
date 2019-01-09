@@ -1,6 +1,7 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongLyric;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 import com.dakakolp.lyricsapp.utils.ParserHelper;
 
@@ -10,15 +11,14 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 
-public class ParseLyricTask extends BaseAsyncTask<String> {
+public class ParseSongLyricTask extends BaseAsyncTask<SongLyric> {
 
-    public ParseLyricTask(TaskListener<String> listener) {
+    public ParseSongLyricTask(TaskListener<SongLyric> listener) {
         super(listener);
     }
 
     @Override
-    protected TaskRequest<String> doInBackground(String... strings) {
-        TaskRequest<String> request = new TaskRequest<>();
+    protected TaskRequest<SongLyric> doInBackground(String... strings) {
         String textSong;
         try {
             Document document = Jsoup
@@ -29,14 +29,11 @@ public class ParseLyricTask extends BaseAsyncTask<String> {
             textSong = getLyric(document);
         } catch (IOException ex) {
             ex.printStackTrace();
-            request.setError("Error, check connection...");
-            return request;
+            return new TaskRequest<>("Error, check connection...");
         } catch (Exception e) {
-            request.setError("An unknown exception...");
-            return request;
+            return new TaskRequest<>("An unknown exception...");
         }
-        request.setResult(textSong);
-        return request;
+        return new TaskRequest<>(new SongLyric(textSong));
     }
 
     private String getLyric(Document document) {

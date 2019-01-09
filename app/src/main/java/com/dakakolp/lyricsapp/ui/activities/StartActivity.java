@@ -1,49 +1,46 @@
 package com.dakakolp.lyricsapp.ui.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
-import com.dakakolp.lyricsapp.asynctasks.ParseSongTask;
+import com.dakakolp.lyricsapp.asynctasks.ParseSongListTask;
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
-import com.dakakolp.lyricsapp.asynctasks.asyncmodels.ListSong;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
-import com.dakakolp.lyricsapp.utils.ParserHelper;
 
 import java.util.List;
 
-public class StartActivity extends AppCompatActivity implements
-        TaskListener<ListSong>,
-        ListSongAdapter.OnClickSongListener{
+public class StartActivity extends BaseActivity implements
+        TaskListener<SongList>,
+        ListSongAdapter.OnClickSongListener {
 
-    public static final String LINK_TO_LYRIC = "link to lyric";
-    public static final String TITLE_SONG = "title song";
-    private static int sNumberSongsOnPage = 20;
+    public static final String LINK_TO_LYRIC_KEY = "linkToLyric key";
+    public static final String TITLE_SONG_KEY = "titleSong key";
+    private static final String EDIT_TEXT_SEARCH_KEY = "EditText key";
+    private static final int NUMBER_SONGS_ON_PAGE = 20;
 
-    private static int sPage = 0;
-    private String mSearchString;
+    private static int sPage;
+    private static String sSearchString;
 
-    private int mNumberSongs;
+    private int mNumberPages;
     private List<Song> mSongs;
 
     private EditText mEditTextSearch;
     private ImageButton mImageButtonSearch;
+    private TextView mTextViewNumberPages;
     private ImageButton mImageButtonBefore;
     private ImageButton mImageButtonNext;
-    private ProgressBar mProgressBar;
     private RecyclerView mRecyclerView;
     private ListSongAdapter mAdapter;
 
@@ -52,78 +49,48 @@ public class StartActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         initViews();
+        hideNavigationButtons();
 
-        mProgressBar.setVisibility(View.GONE);
+        if(savedInstanceState != null) {
+            mEditTextSearch.setText(savedInstanceState.getString(EDIT_TEXT_SEARCH_KEY));
+        }
 
         mImageButtonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!ParserHelper.isOnline(StartActivity.this)){
-                    showToastError();
-                    return;
-                }
-                mImageButtonNext.setVisibility(View.VISIBLE);
-                sPage = 1;
-                mSearchString = mEditTextSearch.getText().toString();
-                uploadSongList(sPage, mSearchString);
-                closeKeyboard();
+                clickOnSearch();
             }
         });
-
         mImageButtonBefore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!ParserHelper.isOnline(StartActivity.this)){
-                    showToastError();
-                    return;
-                }
-                if(sPage > 1) {
-                    sPage--;
-                    uploadSongList(sPage, mSearchString);
-                } else {
-                    showToast();
-                }
+                clickOnBefore();
             }
         });
-
         mImageButtonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!ParserHelper.isOnline(StartActivity.this)){
-                    showToastError();
-                    return;
-                }
-                int pages = mNumberSongs/sNumberSongsOnPage;
-                if(mNumberSongs >= sNumberSongsOnPage && mNumberSongs%sNumberSongsOnPage > 0)
-                    pages++;
-                if(sPage >= 1 && sPage < pages) {
-                    sPage++;
-                    uploadSongList(sPage, mSearchString);
-                } else {
-                    showToast();
-                }
+                clickOnNext();
             }
         });
     }
 
-    private void showToast() {
-        Toast.makeText(StartActivity.this, "out",Toast.LENGTH_SHORT).show();
-    }
-
-    private void showToastError() {
-        Toast.makeText(StartActivity.this, "Error, check connection",Toast.LENGTH_SHORT).show();
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(EDIT_TEXT_SEARCH_KEY, String.valueOf(mEditTextSearch.getText()));
     }
 
     private void initViews() {
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
         mEditTextSearch = findViewById(R.id.edittext_search);
         mImageButtonSearch = findViewById(R.id.image_button_search);
         mImageButtonBefore = findViewById(R.id.image_button_before);
         mImageButtonNext = findViewById(R.id.image_button_next);
-        mProgressBar = findViewById(R.id.progress_loading_songs);
+        mTextViewNumberPages = findViewById(R.id.text_view_pages);
 
         mRecyclerView = findViewById(R.id.recycler_view_songs);
         LinearLayoutManager gridLayoutManager = new LinearLayoutManager(this);
@@ -132,48 +99,84 @@ public class StartActivity extends AppCompatActivity implements
         mRecyclerView.setAdapter(mAdapter);
     }
 
+    private void clickOnSearch() {
+        sPage = 1;
+        sSearchString = mEditTextSearch.getText().toString();
+        uploadSongList(sPage, sSearchString);
+        closeKeyboard();
+    }
+
+    private void clickOnBefore() {
+        if (sPage > 1) {
+            sPage--;
+            uploadSongList(sPage, sSearchString);
+        }
+    }
+
+    private void clickOnNext() {
+        if (sPage >= 1 && sPage < mNumberPages) {
+            sPage++;
+            uploadSongList(sPage, sSearchString);
+        }
+    }
+
     private void uploadSongList(int page, String searchString) {
-        new ParseSongTask(page, this).execute(searchString);
+        new ParseSongListTask(page, this).execute(searchString);
     }
-
-    private void closeKeyboard() {
-        InputMethodManager inputMethodManager = (InputMethodManager) this.getSystemService(Activity.INPUT_METHOD_SERVICE);
-        View view = this.getCurrentFocus();
-        if (view == null) {
-            view = new View(this);
-        }
-        if (inputMethodManager != null) {
-            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
-    }
-
-/*    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }*/
-
 
     //  implementation TaskListener
     @Override
     public void showProgress() {
-        mProgressBar.setVisibility(View.VISIBLE);
+        super.showProgress();
     }
 
     @Override
     public void hideProgress() {
-        mProgressBar.setVisibility(View.GONE);
+        super.hideProgress();
     }
 
     @Override
-    public void onFinalResult(TaskRequest<ListSong> songs) {
+    public void onFinalResult(TaskRequest<SongList> songs) {
+        String textNumberPages;
         if (songs.getError() != null) {
             Toast.makeText(this, songs.getError(), Toast.LENGTH_SHORT).show();
-            return;
+            mNumberPages = 0;
+            textNumberPages = "";
+            mSongs = null;
+            hideNavigationButtons();
+        } else {
+            mNumberPages = getNumberOfPages(songs.getResult().getNumberSongs());
+            textNumberPages = "[" + sPage + " page of " + mNumberPages + "]";
+            mSongs = songs.getResult().getSongs();
+            showNavigationButtons();
         }
-        mNumberSongs = songs.getResult().getNumberSongs();
-        mSongs = songs.getResult().getSongs();
-        mAdapter.setSongList(mSongs);
+        refreshViews(textNumberPages, mSongs);
+    }
+
+    private int getNumberOfPages(int numberSongs) {
+        int pages = numberSongs / NUMBER_SONGS_ON_PAGE;
+        if (numberSongs > NUMBER_SONGS_ON_PAGE && numberSongs % NUMBER_SONGS_ON_PAGE > 0) {
+            pages++;
+        } else if (numberSongs <= NUMBER_SONGS_ON_PAGE) {
+            pages = 1;
+        }
+        return pages;
+    }
+
+    private void showNavigationButtons() {
+        mImageButtonBefore.setVisibility(View.VISIBLE);
+        mImageButtonNext.setVisibility(View.VISIBLE);
+    }
+
+    private void hideNavigationButtons() {
+        mImageButtonBefore.setVisibility(View.GONE);
+        mImageButtonNext.setVisibility(View.GONE);
+    }
+
+    private void refreshViews(String textNumberPages, List<Song> songs) {
+        mTextViewNumberPages.setText(textNumberPages);
+        mAdapter.setSongList(songs);
+        mRecyclerView.scrollToPosition(0);
         mAdapter.notifyDataSetChanged();
     }
 
@@ -181,8 +184,13 @@ public class StartActivity extends AppCompatActivity implements
     @Override
     public void onClickSong(int position) {
         Intent intent = new Intent(StartActivity.this, LyricActivity.class);
-        intent.putExtra(TITLE_SONG, mSongs.get(position).getSongTitle());
-        intent.putExtra(LINK_TO_LYRIC, mSongs.get(position).getLink());
+        intent.putExtra(TITLE_SONG_KEY, mSongs.get(position).getSongTitle());
+        intent.putExtra(LINK_TO_LYRIC_KEY, mSongs.get(position).getLink());
         startActivity(intent);
     }
+    /*    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }*/
 }

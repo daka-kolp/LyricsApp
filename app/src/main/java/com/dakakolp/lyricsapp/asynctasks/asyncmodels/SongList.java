@@ -5,13 +5,18 @@ import com.dakakolp.lyricsapp.models.Song;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListSong {
+public class SongList implements TaskResult{
     private List<Song> mSongs;
     private int mNumberSongs;
 
-    public ListSong() {
+    public SongList() {
         mSongs = new ArrayList<>();
     }
+
+//    public SongList(List<Song> songs, int numberSongs) {
+//        mSongs = songs;
+//        mNumberSongs = numberSongs;
+//    }
 
     public List<Song> getSongs() {
         return mSongs;

@@ -57,7 +57,7 @@ public class ListSongAdapter extends RecyclerView.Adapter<ListSongAdapter.ListSo
         private TextView mSongTitle;
         private CardView mCardSong;
 
-        ListSongViewHolder(@NonNull View itemView) {
+        private ListSongViewHolder(@NonNull View itemView) {
             super(itemView);
             mSinger = itemView.findViewById(R.id.singer_name);
             mSongTitle = itemView.findViewById(R.id.album_title);

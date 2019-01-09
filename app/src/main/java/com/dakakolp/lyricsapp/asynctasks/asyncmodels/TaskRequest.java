@@ -1,9 +1,17 @@
 package com.dakakolp.lyricsapp.asynctasks.asyncmodels;
 
-public class TaskRequest<R> {
+public class TaskRequest<R extends TaskResult> {
 
     private String mError;
     private R mResult;
+
+    public TaskRequest(String error) {
+        mError = error;
+    }
+
+    public TaskRequest(R result) {
+        mResult = result;
+    }
 
     public String getError() {
         return mError;

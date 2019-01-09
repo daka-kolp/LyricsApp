@@ -1,7 +1,7 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
-import com.dakakolp.lyricsapp.asynctasks.asyncmodels.ListSong;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.utils.ParserHelper;
@@ -15,19 +15,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ParseSongTask extends BaseAsyncTask<ListSong> {
+public class ParseSongListTask extends BaseAsyncTask<SongList> {
     private int mPage;
 
-    public ParseSongTask(int page, TaskListener<ListSong> listener) {
+    public ParseSongListTask(int page, TaskListener<SongList> listener) {
         super(listener);
         mPage = page;
     }
 
     @Override
-    protected TaskRequest<ListSong> doInBackground(String... strings) {
-        TaskRequest<ListSong> request = new TaskRequest<>();
-        ListSong songs = new ListSong();
-
+    protected TaskRequest<SongList> doInBackground(String... strings) {
+        SongList songs = new SongList();
         try {
             Document mainDocument = Jsoup
                     .connect(ParserHelper.SEARCH_LINK + strings[0] + ParserHelper.SEARCH_QUERY + mPage)
@@ -39,18 +37,14 @@ public class ParseSongTask extends BaseAsyncTask<ListSong> {
             songs.setSongs(getSongsForListSong(mainDocument));
 
         } catch (IOException e) {
-            request.setError("Error, check connection...");
-            return request;
+            return new TaskRequest<>("Error, check connection...");
         } catch (Exception e) {
-            request.setError("An unknown exception...");
-            return request;
+            return new TaskRequest<>("An unknown exception...");
         }
         if (songs.getSongs().isEmpty()) {
-            request.setError("Sorry, your search returned no results...");
-            return request;
+            return new TaskRequest<>("Sorry, your search returned no results...");
         }
-        request.setResult(songs);
-        return request;
+        return new TaskRequest<>(songs);
     }
 
     private int getNumberSongsForListSong(Document mainDocument) {
