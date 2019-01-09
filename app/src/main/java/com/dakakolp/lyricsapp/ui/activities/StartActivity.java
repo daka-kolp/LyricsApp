@@ -27,11 +27,12 @@ public class StartActivity extends BaseActivity implements
 
     public static final String LINK_TO_LYRIC_KEY = "linkToLyric key";
     public static final String TITLE_SONG_KEY = "titleSong key";
-    private static final String EDIT_TEXT_SEARCH_KEY = "EditText key";
+    private static final String SEARCH_STRING_KEY = "EditText key";
     private static final int NUMBER_SONGS_ON_PAGE = 20;
+    private static final String PAGE_KEY = "page key";
 
-    private static int sPage;
-    private static String sSearchString;
+    private int mPage;
+    private String mSearchString;
 
     private int mNumberPages;
     private List<Song> mSongs;
@@ -54,7 +55,10 @@ public class StartActivity extends BaseActivity implements
         hideNavigationButtons();
 
         if(savedInstanceState != null) {
-            mEditTextSearch.setText(savedInstanceState.getString(EDIT_TEXT_SEARCH_KEY));
+            mPage = savedInstanceState.getInt(PAGE_KEY);
+            mSearchString = savedInstanceState.getString(SEARCH_STRING_KEY);
+            mEditTextSearch.setText(mSearchString);
+            uploadSongList(mPage, mSearchString);
         }
 
         mImageButtonSearch.setOnClickListener(new View.OnClickListener() {
@@ -80,7 +84,8 @@ public class StartActivity extends BaseActivity implements
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(EDIT_TEXT_SEARCH_KEY, String.valueOf(mEditTextSearch.getText()));
+        outState.putString(SEARCH_STRING_KEY, mSearchString);
+        outState.putInt(PAGE_KEY, mPage);
     }
 
     private void initViews() {
@@ -100,23 +105,23 @@ public class StartActivity extends BaseActivity implements
     }
 
     private void clickOnSearch() {
-        sPage = 1;
-        sSearchString = mEditTextSearch.getText().toString();
-        uploadSongList(sPage, sSearchString);
+        mPage = 1;
+        mSearchString = mEditTextSearch.getText().toString();
+        uploadSongList(mPage, mSearchString);
         closeKeyboard();
     }
 
     private void clickOnBefore() {
-        if (sPage > 1) {
-            sPage--;
-            uploadSongList(sPage, sSearchString);
+        if (mPage > 1) {
+            mPage--;
+            uploadSongList(mPage, mSearchString);
         }
     }
 
     private void clickOnNext() {
-        if (sPage >= 1 && sPage < mNumberPages) {
-            sPage++;
-            uploadSongList(sPage, sSearchString);
+        if (mPage >= 1 && mPage < mNumberPages) {
+            mPage++;
+            uploadSongList(mPage, mSearchString);
         }
     }
 
@@ -146,7 +151,7 @@ public class StartActivity extends BaseActivity implements
             hideNavigationButtons();
         } else {
             mNumberPages = getNumberOfPages(songs.getResult().getNumberSongs());
-            textNumberPages = "[" + sPage + " page of " + mNumberPages + "]";
+            textNumberPages = "[" + mPage + " page of " + mNumberPages + "]";
             mSongs = songs.getResult().getSongs();
             showNavigationButtons();
         }
