@@ -26,4 +26,9 @@ public abstract class BaseAsyncTask<R extends TaskResult> extends AsyncTask<Stri
             mListener.onFinalResult(t);
         }
     }
+
+    @Override
+    protected void onCancelled(TaskRequest<R> request) {
+        mListener.cancelProgress();
+    }
 }

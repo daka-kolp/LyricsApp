@@ -13,10 +13,10 @@ public class SongList implements TaskResult{
         mSongs = new ArrayList<>();
     }
 
-//    public SongList(List<Song> songs, int numberSongs) {
-//        mSongs = songs;
-//        mNumberSongs = numberSongs;
-//    }
+    public SongList(List<Song> songs, int numberSongs) {
+        mSongs = songs;
+        mNumberSongs = numberSongs;
+    }
 
     public List<Song> getSongs() {
         return mSongs;

@@ -16,6 +16,7 @@ import com.dakakolp.lyricsapp.asynctasks.ParseSongListTask;
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
+import com.dakakolp.lyricsapp.models.Lyric;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
 
@@ -25,8 +26,7 @@ public class StartActivity extends BaseActivity implements
         TaskListener<SongList>,
         ListSongAdapter.OnClickSongListener {
 
-    public static final String LINK_TO_LYRIC_KEY = "linkToLyric key";
-    public static final String TITLE_SONG_KEY = "titleSong key";
+    public static final String LYRIC_KEY = "linkToLyric key";
     private static final String SEARCH_STRING_KEY = "EditText key";
     private static final int NUMBER_SONGS_ON_PAGE = 20;
     private static final String PAGE_KEY = "page key";
@@ -57,7 +57,6 @@ public class StartActivity extends BaseActivity implements
         if(savedInstanceState != null) {
             mPage = savedInstanceState.getInt(PAGE_KEY);
             mSearchString = savedInstanceState.getString(SEARCH_STRING_KEY);
-            mEditTextSearch.setText(mSearchString);
             uploadSongList(mPage, mSearchString);
         }
 
@@ -130,14 +129,19 @@ public class StartActivity extends BaseActivity implements
     }
 
     //  implementation TaskListener
+
     @Override
     public void showProgress() {
         super.showProgress();
     }
-
     @Override
     public void hideProgress() {
         super.hideProgress();
+    }
+
+    @Override
+    public void cancelProgress() {
+        
     }
 
     @Override
@@ -189,8 +193,10 @@ public class StartActivity extends BaseActivity implements
     @Override
     public void onClickSong(int position) {
         Intent intent = new Intent(StartActivity.this, LyricActivity.class);
-        intent.putExtra(TITLE_SONG_KEY, mSongs.get(position).getSongTitle());
-        intent.putExtra(LINK_TO_LYRIC_KEY, mSongs.get(position).getLink());
+        intent.putExtra(LYRIC_KEY, new Lyric(
+                mSongs.get(position).getSongTitle(),
+                mSongs.get(position).getLink())
+        );
         startActivity(intent);
     }
     /*    @Override

@@ -18,6 +18,9 @@ import java.util.List;
 public class ParseSongListTask extends BaseAsyncTask<SongList> {
     private int mPage;
 
+    private int mNumberSongs;
+    private List<Song> mSongList;
+
     public ParseSongListTask(int page, TaskListener<SongList> listener) {
         super(listener);
         mPage = page;
@@ -32,10 +35,11 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
                     .header(ParserHelper.USER_AGENT_KEY, ParserHelper.USER_AGENT_VALUE)
                     .get();
 
-            songs.setNumberSongs(getNumberSongsForListSong(mainDocument));
-
-            songs.setSongs(getSongsForListSong(mainDocument));
-
+            mNumberSongs = getNumberSongsForListSong(mainDocument);
+            mSongList = getSongsForListSong(mainDocument);
+            if (isCancelled()) {
+                return null;
+            }
         } catch (IOException e) {
             return new TaskRequest<>("Error, check connection...");
         } catch (Exception e) {
@@ -44,12 +48,12 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
         if (songs.getSongs().isEmpty()) {
             return new TaskRequest<>("Sorry, your search returned no results...");
         }
-        return new TaskRequest<>(songs);
+        return new TaskRequest<>(new SongList(mSongList, mNumberSongs));
     }
 
     private int getNumberSongsForListSong(Document mainDocument) {
         Elements elemPanelHeading = mainDocument.getElementsByClass("panel-heading");
-        if(!elemPanelHeading.isEmpty()) {
+        if (!elemPanelHeading.isEmpty()) {
             Element element = elemPanelHeading.first();
             String dataListSong = element.select("small")
                     .first()
