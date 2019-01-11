@@ -21,11 +21,9 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lyric);
-
-        initViews();
-
         Lyric lyric = getDataIntent();
 
+        initViews();
         initToolbar(lyric.getTitle());
 
         new ParseSongLyricTask(this).execute(lyric.getLink());
@@ -55,11 +53,6 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
     @Override
     public void hideProgress() {
         super.hideProgress();
-    }
-
-    @Override
-    public void cancelProgress() {
-
     }
 
     @Override

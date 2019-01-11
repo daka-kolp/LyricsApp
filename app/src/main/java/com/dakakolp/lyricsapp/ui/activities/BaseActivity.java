@@ -2,7 +2,6 @@ package com.dakakolp.lyricsapp.ui.activities;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.AppCompatActivity;
@@ -16,27 +15,16 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void showProgress() {
         if (mProgressLoading == null) {
-            mProgressLoading = new ProgressDialog(this);
+            mProgressLoading = ProgressDialog.show(this, null, null, false, true);
+            mProgressLoading.setContentView(R.layout.dialog_progress_bar);
             if (mProgressLoading.getWindow() != null) {
                 mProgressLoading.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             }
-            mProgressLoading.setTitle(null);
-            mProgressLoading.setMessage(null);
-            mProgressLoading.setIndeterminate(false);
-            mProgressLoading.setCancelable(true);
-            mProgressLoading.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-
-                }
-            });
-            mProgressLoading.show();
-            mProgressLoading.setContentView(R.layout.dialog_progress_bar);
         }
     }
 
     protected void hideProgress() {
-        if (mProgressLoading != null) {
+        if (mProgressLoading != null && mProgressLoading.isShowing()) {
             mProgressLoading.dismiss();
             mProgressLoading = null;
         }
@@ -53,4 +41,9 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        hideProgress();
+    }
 }

@@ -28,7 +28,6 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
 
     @Override
     protected TaskRequest<SongList> doInBackground(String... strings) {
-        SongList songs = new SongList();
         try {
             Document mainDocument = Jsoup
                     .connect(ParserHelper.SEARCH_LINK + strings[0] + ParserHelper.SEARCH_QUERY + mPage)
@@ -37,15 +36,12 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
 
             mNumberSongs = getNumberSongsForListSong(mainDocument);
             mSongList = getSongsForListSong(mainDocument);
-            if (isCancelled()) {
-                return null;
-            }
         } catch (IOException e) {
             return new TaskRequest<>("Error, check connection...");
         } catch (Exception e) {
             return new TaskRequest<>("An unknown exception...");
         }
-        if (songs.getSongs().isEmpty()) {
+        if (mSongList.isEmpty()) {
             return new TaskRequest<>("Sorry, your search returned no results...");
         }
         return new TaskRequest<>(new SongList(mSongList, mNumberSongs));

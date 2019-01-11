@@ -20,22 +20,26 @@ import com.dakakolp.lyricsapp.models.Lyric;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StartActivity extends BaseActivity implements
         TaskListener<SongList>,
         ListSongAdapter.OnClickSongListener {
 
-    public static final String LYRIC_KEY = "linkToLyric key";
-    private static final String SEARCH_STRING_KEY = "EditText key";
-    private static final int NUMBER_SONGS_ON_PAGE = 20;
     private static final String PAGE_KEY = "page key";
+    private static final String NUMBER_PAGES_KEY = "number pages key";
+    private static final String SEARCH_STRING_KEY = "search string key";
+    private static final String SONG_LIST_KEY = "song list key";
+    public static final String LYRIC_KEY = "linkToLyric key";
+    private static final int NUMBER_SONGS_ON_PAGE = 20;
 
     private int mPage;
     private String mSearchString;
 
     private int mNumberPages;
     private List<Song> mSongs;
+    private String mTextNumberPages;
 
     private EditText mEditTextSearch;
     private ImageButton mImageButtonSearch;
@@ -54,10 +58,16 @@ public class StartActivity extends BaseActivity implements
         initViews();
         hideNavigationButtons();
 
-        if(savedInstanceState != null) {
+        if (savedInstanceState != null) {
             mPage = savedInstanceState.getInt(PAGE_KEY);
+            mNumberPages = savedInstanceState.getInt(NUMBER_PAGES_KEY);
             mSearchString = savedInstanceState.getString(SEARCH_STRING_KEY);
-            uploadSongList(mPage, mSearchString);
+            mSongs = savedInstanceState.getParcelableArrayList(SONG_LIST_KEY);
+            if(mSongs != null) {
+                mTextNumberPages = getTextNumberText(mPage, mNumberPages);
+                refreshViews(mTextNumberPages, mSongs);
+            }
+
         }
 
         mImageButtonSearch.setOnClickListener(new View.OnClickListener() {
@@ -83,8 +93,10 @@ public class StartActivity extends BaseActivity implements
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(SEARCH_STRING_KEY, mSearchString);
         outState.putInt(PAGE_KEY, mPage);
+        outState.putInt(NUMBER_PAGES_KEY, mNumberPages);
+        outState.putString(SEARCH_STRING_KEY, mSearchString);
+        outState.putParcelableArrayList(SONG_LIST_KEY, (ArrayList<Song>) mSongs);
     }
 
     private void initViews() {
@@ -129,37 +141,29 @@ public class StartActivity extends BaseActivity implements
     }
 
     //  implementation TaskListener
-
     @Override
     public void showProgress() {
         super.showProgress();
     }
+
     @Override
     public void hideProgress() {
         super.hideProgress();
     }
 
     @Override
-    public void cancelProgress() {
-        
-    }
-
-    @Override
     public void onFinalResult(TaskRequest<SongList> songs) {
-        String textNumberPages;
         if (songs.getError() != null) {
             Toast.makeText(this, songs.getError(), Toast.LENGTH_SHORT).show();
             mNumberPages = 0;
-            textNumberPages = "";
+            mTextNumberPages = "";
             mSongs = null;
-            hideNavigationButtons();
         } else {
             mNumberPages = getNumberOfPages(songs.getResult().getNumberSongs());
-            textNumberPages = "[" + mPage + " page of " + mNumberPages + "]";
+            mTextNumberPages = getTextNumberText(mPage, mNumberPages);
             mSongs = songs.getResult().getSongs();
-            showNavigationButtons();
         }
-        refreshViews(textNumberPages, mSongs);
+        refreshViews(mTextNumberPages, mSongs);
     }
 
     private int getNumberOfPages(int numberSongs) {
@@ -170,6 +174,10 @@ public class StartActivity extends BaseActivity implements
             pages = 1;
         }
         return pages;
+    }
+
+    private String getTextNumberText(int page, int numberPages) {
+        return "[" + page + " page of " + numberPages + "]";
     }
 
     private void showNavigationButtons() {
@@ -183,6 +191,11 @@ public class StartActivity extends BaseActivity implements
     }
 
     private void refreshViews(String textNumberPages, List<Song> songs) {
+        if (mSongs == null) {
+            hideNavigationButtons();
+        } else {
+            showNavigationButtons();
+        }
         mTextViewNumberPages.setText(textNumberPages);
         mAdapter.setSongList(songs);
         mRecyclerView.scrollToPosition(0);
