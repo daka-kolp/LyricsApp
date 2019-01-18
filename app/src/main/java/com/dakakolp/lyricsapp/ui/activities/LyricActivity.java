@@ -3,6 +3,8 @@ package com.dakakolp.lyricsapp.ui.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +18,7 @@ import com.dakakolp.lyricsapp.models.Lyric;
 public class LyricActivity extends BaseActivity implements TaskListener<SongLyric> {
 
     private TextView mTextViewLyric;
+    private FrameLayout mProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,9 +30,11 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
         initToolbar(lyric.getTitle());
 
         new ParseSongLyricTask(this).execute(lyric.getLink());
+
     }
 
     private void initViews() {
+        mProgressBar = findViewById(R.id.progress_loading_songs);
         mTextViewLyric = findViewById(R.id.text_view_lyric);
     }
 
@@ -48,11 +53,11 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
 
     @Override
     public void showProgress() {
-        super.showProgress();
+        mProgressBar.setVisibility(View.VISIBLE);
     }
     @Override
     public void hideProgress() {
-        super.hideProgress();
+        mProgressBar.setVisibility(View.GONE);
     }
 
     @Override

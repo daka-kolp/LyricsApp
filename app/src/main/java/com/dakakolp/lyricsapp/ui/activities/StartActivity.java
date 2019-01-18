@@ -7,7 +7,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +43,9 @@ public class StartActivity extends BaseActivity implements
     private List<Song> mSongs;
     private String mTextNumberPages;
 
+    private FrameLayout mProgressBar;
+    private LinearLayout mMainLayout;
+
     private EditText mEditTextSearch;
     private ImageButton mImageButtonSearch;
     private TextView mTextViewNumberPages;
@@ -67,7 +72,6 @@ public class StartActivity extends BaseActivity implements
                 mTextNumberPages = getTextNumberText(mPage, mNumberPages);
                 refreshViews(mTextNumberPages, mSongs);
             }
-
         }
 
         mImageButtonSearch.setOnClickListener(new View.OnClickListener() {
@@ -101,6 +105,9 @@ public class StartActivity extends BaseActivity implements
 
     private void initViews() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        mProgressBar = findViewById(R.id.progress_loading_songs);
+        mMainLayout = findViewById(R.id.main_linear_layout);
 
         mEditTextSearch = findViewById(R.id.edittext_search);
         mImageButtonSearch = findViewById(R.id.image_button_search);
@@ -143,12 +150,13 @@ public class StartActivity extends BaseActivity implements
     //  implementation TaskListener
     @Override
     public void showProgress() {
-        super.showProgress();
+        mMainLayout.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.VISIBLE);
     }
-
     @Override
     public void hideProgress() {
-        super.hideProgress();
+        mMainLayout.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.GONE);
     }
 
     @Override

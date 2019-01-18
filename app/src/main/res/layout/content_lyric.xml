@@ -5,8 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:fitsSystemWindows="true"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
     tools:context=".ui.activities.LyricActivity"
     tools:showIn="@layout/activity_lyric">
+
+    <include layout="@layout/progress_bar_dialog" />
 
     <android.support.v4.widget.NestedScrollView
         android:id="@+id/scroll_view_lyric"
