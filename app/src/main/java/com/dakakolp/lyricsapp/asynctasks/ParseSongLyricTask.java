@@ -27,10 +27,10 @@ public class ParseSongLyricTask extends BaseAsyncTask<SongLyric> {
                     .get();
 
             textSong = getLyric(document);
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (IOException e) {
             return new TaskRequest<>("Error, check connection...");
         } catch (Exception e) {
+            e.printStackTrace();
             return new TaskRequest<>("An unknown exception...");
         }
         return new TaskRequest<>(new SongLyric(textSong));

@@ -1,5 +1,8 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
+import android.text.TextUtils;
+import android.util.Log;
+
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
@@ -18,9 +21,6 @@ import java.util.List;
 public class ParseSongListTask extends BaseAsyncTask<SongList> {
     private int mPage;
 
-    private int mNumberSongs;
-    private List<Song> mSongList;
-
     public ParseSongListTask(int page, TaskListener<SongList> listener) {
         super(listener);
         mPage = page;
@@ -28,23 +28,30 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
 
     @Override
     protected TaskRequest<SongList> doInBackground(String... strings) {
+        if (TextUtils.isEmpty(strings[0])) {
+            return new TaskRequest<>("Your request is empty...");
+        }
+        int numberSongs;
+        List<Song> songList;
         try {
             Document mainDocument = Jsoup
                     .connect(ParserHelper.SEARCH_LINK + strings[0] + ParserHelper.SEARCH_QUERY + mPage)
                     .header(ParserHelper.USER_AGENT_KEY, ParserHelper.USER_AGENT_VALUE)
                     .get();
 
-            mNumberSongs = getNumberSongsForListSong(mainDocument);
-            mSongList = getSongsForListSong(mainDocument);
+            numberSongs = getNumberSongsForListSong(mainDocument);
+            songList = getSongsForListSong(mainDocument);
         } catch (IOException e) {
             return new TaskRequest<>("Error, check connection...");
         } catch (Exception e) {
+            e.printStackTrace();
             return new TaskRequest<>("An unknown exception...");
         }
-        if (mSongList.isEmpty()) {
+        if (songList.isEmpty()) {
             return new TaskRequest<>("Sorry, your search returned no results...");
         }
-        return new TaskRequest<>(new SongList(mSongList, mNumberSongs));
+        Log.d("qwerty", "doInBackground: " + songList);
+        return new TaskRequest<>(new SongList(songList, numberSongs));
     }
 
     private int getNumberSongsForListSong(Document mainDocument) {
@@ -71,6 +78,7 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
         List<Song> songs = new ArrayList<>();
         Elements elemVisitedLyr = mainDocument.getElementsByClass("text-left visitedlyr");
         for (Element element : elemVisitedLyr) {
+
             List<String> songInfo = element.select("b").eachText();
             Song song = new Song();
             song.setSongTitle(songInfo.get(0));
