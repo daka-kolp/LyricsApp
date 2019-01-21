@@ -1,6 +1,6 @@
 package com.dakakolp.lyricsapp.asynctasks.asyncmodels;
 
-public class SongLyric implements TaskResult {
+public class SongLyric {
 
     private String mText;
 

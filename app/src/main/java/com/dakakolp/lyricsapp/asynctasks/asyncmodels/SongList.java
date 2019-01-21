@@ -5,7 +5,7 @@ import com.dakakolp.lyricsapp.models.Song;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SongList implements TaskResult{
+public class SongList {
     private List<Song> mSongs;
     private int mNumberSongs;
 

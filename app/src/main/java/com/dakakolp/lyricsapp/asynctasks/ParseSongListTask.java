@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
-import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskResult;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.utils.ParserHelper;
 
@@ -27,9 +27,9 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
     }
 
     @Override
-    protected TaskRequest<SongList> doInBackground(String... strings) {
+    protected TaskResult<SongList> doInBackground(String... strings) {
         if (TextUtils.isEmpty(strings[0])) {
-            return new TaskRequest<>("Your request is empty...");
+            return new TaskResult<>("Your request is empty...");
         }
         int numberSongs;
         List<Song> songList;
@@ -42,16 +42,16 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
             numberSongs = getNumberSongsForListSong(mainDocument);
             songList = getSongsForListSong(mainDocument);
         } catch (IOException e) {
-            return new TaskRequest<>("Error, check connection...");
+            return new TaskResult<>("Error, check connection...");
         } catch (Exception e) {
             e.printStackTrace();
-            return new TaskRequest<>("An unknown exception...");
+            return new TaskResult<>("An unknown exception...");
         }
         if (songList.isEmpty()) {
-            return new TaskRequest<>("Sorry, your search returned no results...");
+            return new TaskResult<>("Sorry, your search returned no results...");
         }
         Log.d("qwerty", "doInBackground: " + songList);
-        return new TaskRequest<>(new SongList(songList, numberSongs));
+        return new TaskResult<>(new SongList(songList, numberSongs));
     }
 
     private int getNumberSongsForListSong(Document mainDocument) {

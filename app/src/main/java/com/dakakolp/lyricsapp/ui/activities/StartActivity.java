@@ -18,7 +18,7 @@ import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.asynctasks.ParseSongListTask;
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
-import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskRequest;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskResult;
 import com.dakakolp.lyricsapp.models.Lyric;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
@@ -180,7 +180,7 @@ public class StartActivity extends BaseActivity implements
     }
 
     @Override
-    public void onFinalResult(TaskRequest<SongList> songs) {
+    public void onFinalResult(TaskResult<SongList> songs) {
         if (songs.getError() != null) {
             Toast.makeText(this, songs.getError(), Toast.LENGTH_SHORT).show();
             mNumberPages = 0;
