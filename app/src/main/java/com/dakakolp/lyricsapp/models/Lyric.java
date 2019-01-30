@@ -4,10 +4,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class Lyric implements Parcelable {
+    private String mSinger;
     private String mTitle;
     private String mLink;
 
-    public Lyric(String title, String link) {
+    public Lyric(String singer, String title, String link) {
+        mSinger = singer;
         mTitle = title;
         mLink = link;
     }
@@ -28,7 +30,16 @@ public class Lyric implements Parcelable {
         mLink = link;
     }
 
+    public String getSinger() {
+        return mSinger;
+    }
+
+    public void setSinger(String singer) {
+        mSinger = singer;
+    }
+
     private Lyric(Parcel in) {
+        mSinger = in.readString();
         mTitle = in.readString();
         mLink = in.readString();
     }
@@ -52,6 +63,7 @@ public class Lyric implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mSinger);
         dest.writeString(mTitle);
         dest.writeString(mLink);
     }

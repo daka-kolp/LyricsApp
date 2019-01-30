@@ -4,31 +4,50 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    android:fitsSystemWindows="true"
     android:descendantFocusability="beforeDescendants"
+    android:fitsSystemWindows="true"
     android:focusableInTouchMode="true"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".ui.activities.LyricActivity"
     tools:showIn="@layout/activity_lyric">
 
-    <include layout="@layout/progress_bar_dialog" />
+    <include layout="@layout/progress_bar" />
 
-    <android.support.v4.widget.NestedScrollView
-        android:id="@+id/scroll_view_lyric"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="@dimen/margin_8dp"
-        android:layout_marginRight="@dimen/margin_8dp"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/text_view_lyric"
+            android:id="@+id/text_view_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_16dp"
+            android:layout_marginBottom="@dimen/margin_8dp"
+            android:gravity="center"
+            android:textSize="@dimen/size_text_16sp"
+            android:textStyle="bold"
+            tools:text="Title" />
+
+        <ScrollView
+            android:id="@+id/scroll_view_lyric"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center" />
-    </android.support.v4.widget.NestedScrollView>
+            android:layout_marginLeft="@dimen/margin_8dp"
+            android:layout_marginRight="@dimen/margin_8dp">
 
+            <TextView
+                android:id="@+id/text_view_lyric"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_8dp"
+                android:layout_marginBottom="@dimen/margin_16dp"
+                android:gravity="center" />
+
+        </ScrollView>
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

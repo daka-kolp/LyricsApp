@@ -111,7 +111,6 @@ public class StartActivity extends BaseActivity implements
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         mProgressBarLayout = findViewById(R.id.progress_layout);
-//        mProgressBar = findViewById(R.id.progress_bar_loading_songs);
         mMainLayout = findViewById(R.id.main_linear_layout);
 
         mEditTextSearch = findViewById(R.id.edittext_search);
@@ -237,6 +236,7 @@ public class StartActivity extends BaseActivity implements
     public void onClickSong(int position) {
         Intent intent = new Intent(StartActivity.this, LyricActivity.class);
         intent.putExtra(INTENT_LYRIC_KEY, new Lyric(
+                mSongs.get(position).getSinger(),
                 mSongs.get(position).getSongTitle(),
                 mSongs.get(position).getLink())
         );

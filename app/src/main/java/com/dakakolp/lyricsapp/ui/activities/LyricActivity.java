@@ -17,24 +17,47 @@ import com.dakakolp.lyricsapp.models.Lyric;
 
 public class LyricActivity extends BaseActivity implements TaskListener<SongLyric> {
 
+    private static final String LYRIC_TEXT_KEY = "lyric text key";
+    private static final String LYRIC_KEY = "lyric key";
+    private TextView mTextViewTitle;
     private TextView mTextViewLyric;
     private FrameLayout mProgressBar;
+
+    private Lyric mLyric;
+    private String mLyricText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lyric);
-        Lyric lyric = getDataIntent();
+
 
         initViews();
-        initToolbar(lyric.getTitle());
+        loadData(savedInstanceState);
+        initToolbar(mLyric.getTitle());
+    }
 
-        new ParseSongLyricTask(this).execute(lyric.getLink());
+    private void loadData(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            mLyric = savedInstanceState.getParcelable(LYRIC_KEY);
+            mLyricText = savedInstanceState.getString(LYRIC_TEXT_KEY);
+            refreshViews(mLyric, mLyricText);
+        } else {
+            mLyric = getDataIntent();
+            new ParseSongLyricTask(this).execute(mLyric.getLink());
+        }
+    }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(LYRIC_KEY, mLyric);
+        outState.putString(LYRIC_TEXT_KEY, mLyricText);
     }
 
     private void initViews() {
         mProgressBar = findViewById(R.id.progress_layout);
+        mTextViewTitle = findViewById(R.id.text_view_title);
         mTextViewLyric = findViewById(R.id.text_view_lyric);
     }
 
@@ -55,6 +78,7 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
     public void showProgress() {
         mProgressBar.setVisibility(View.VISIBLE);
     }
+
     @Override
     public void hideProgress() {
         mProgressBar.setVisibility(View.GONE);
@@ -66,7 +90,13 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
             Toast.makeText(this, textSong.getError(), Toast.LENGTH_SHORT).show();
             return;
         }
-        mTextViewLyric.setText(textSong.getResult().getText());
+        mLyricText = textSong.getResult().getText();
+        refreshViews(mLyric, mLyricText);
+    }
+
+    private void refreshViews(Lyric lyric, String textSong) {
+        mTextViewTitle.setText(lyric.getTitle() + "\nby\n" + lyric.getSinger());
+        mTextViewLyric.setText(textSong);
     }
 
 }

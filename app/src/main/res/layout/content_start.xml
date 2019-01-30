@@ -11,7 +11,7 @@
     tools:context=".ui.activities.StartActivity"
     tools:showIn="@layout/activity_start">
 
-    <include layout="@layout/progress_bar_dialog" />
+    <include layout="@layout/progress_bar" />
 
     <LinearLayout
         android:id="@+id/main_linear_layout"
