@@ -31,10 +31,16 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lyric);
 
-
         initViews();
         loadData(savedInstanceState);
         initToolbar(mLyric.getTitle());
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(LYRIC_KEY, mLyric);
+        outState.putString(LYRIC_TEXT_KEY, mLyricText);
     }
 
     private void loadData(Bundle savedInstanceState) {
@@ -46,13 +52,6 @@ public class LyricActivity extends BaseActivity implements TaskListener<SongLyri
             mLyric = getDataIntent();
             new ParseSongLyricTask(this).execute(mLyric.getLink());
         }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(LYRIC_KEY, mLyric);
-        outState.putString(LYRIC_TEXT_KEY, mLyricText);
     }
 
     private void initViews() {

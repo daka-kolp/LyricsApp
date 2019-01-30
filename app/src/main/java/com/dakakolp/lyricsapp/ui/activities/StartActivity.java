@@ -1,42 +1,39 @@
 package com.dakakolp.lyricsapp.ui.activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.R;
-import com.dakakolp.lyricsapp.asynctasks.ParseSongListTask;
-import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
-import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
-import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskResult;
 import com.dakakolp.lyricsapp.models.Lyric;
 import com.dakakolp.lyricsapp.models.Song;
+import com.dakakolp.lyricsapp.services.SongListService;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class StartActivity extends BaseActivity implements
-        TaskListener<SongList>,
-        ListSongAdapter.OnClickSongListener{
-    public static final String TAG = "qwerty";
+        ListSongAdapter.OnClickSongListener {
+//    public static final String TAG = "qwerty";
 
     private static final String PAGE_KEY = "page key";
+    public static final String TEXT_NUMBER_PAGES_KEY = "text_number_pages key";
     private static final String SEARCH_STRING_KEY = "search_string key";
     private static final String NUMBER_PAGES_KEY = "number_pages key";
     private static final String SONG_LIST_KEY = "song_list key";
     public static final String INTENT_LYRIC_KEY = "link_to_lyric key";
-    private static final int NUMBER_SONGS_ON_PAGE = 20;
 
     private int mPage;
     private String mSearchString;
@@ -47,7 +44,6 @@ public class StartActivity extends BaseActivity implements
 
     private FrameLayout mProgressBarLayout;
     private LinearLayout mMainLayout;
-    private ParseSongListTask mParseSongListTask;
 
     private EditText mEditTextSearch;
     private ImageButton mImageButtonSearch;
@@ -66,7 +62,6 @@ public class StartActivity extends BaseActivity implements
         initViews();
         hideNavigationButtons();
         restoreData(savedInstanceState);
-        Log.d(TAG, "onCreate: " + mSongs);
 
         mImageButtonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,9 +86,7 @@ public class StartActivity extends BaseActivity implements
             @Override
             public void onClick(View v) {
                 hideProgress();
-                if (mParseSongListTask != null) {
-                    mParseSongListTask.cancel(true);
-                }
+                cancel();
             }
         });
     }
@@ -104,6 +97,7 @@ public class StartActivity extends BaseActivity implements
         outState.putInt(PAGE_KEY, mPage);
         outState.putInt(NUMBER_PAGES_KEY, mNumberPages);
         outState.putString(SEARCH_STRING_KEY, mSearchString);
+        outState.putString(TEXT_NUMBER_PAGES_KEY, mTextNumberPages);
         outState.putParcelableArrayList(SONG_LIST_KEY, (ArrayList<Song>) mSongs);
     }
 
@@ -133,7 +127,7 @@ public class StartActivity extends BaseActivity implements
             mSearchString = savedInstanceState.getString(SEARCH_STRING_KEY);
             mSongs = savedInstanceState.getParcelableArrayList(SONG_LIST_KEY);
             if (mSongs != null) {
-                mTextNumberPages = getTextNumberText(mPage, mNumberPages);
+                mTextNumberPages = savedInstanceState.getString(TEXT_NUMBER_PAGES_KEY);
                 refreshViews(mTextNumberPages, mSongs);
             }
         }
@@ -142,69 +136,45 @@ public class StartActivity extends BaseActivity implements
     private void clickOnSearch() {
         mPage = 1;
         mSearchString = mEditTextSearch.getText().toString();
-        uploadSongList(mPage, mSearchString);
+        downloadSongList(mPage, mSearchString);
         closeKeyboard();
     }
 
     private void clickOnBefore() {
         if (mPage > 1) {
             mPage--;
-            uploadSongList(mPage, mSearchString);
+            downloadSongList(mPage, mSearchString);
         }
     }
 
     private void clickOnNext() {
         if (mPage >= 1 && mPage < mNumberPages) {
             mPage++;
-            uploadSongList(mPage, mSearchString);
+            downloadSongList(mPage, mSearchString);
         }
     }
 
-    private void uploadSongList(int page, String searchString) {
-        mParseSongListTask = new ParseSongListTask(page, this);
-        mParseSongListTask.execute(searchString);
+    private void downloadSongList(int page, String searchString) {
+        Intent intent = new Intent(this, SongListService.class);
+        intent.putExtra(SongListService.PAGE_NUMBER, page);
+        intent.putExtra(SongListService.SEARCH_STRING, searchString);
+        startService(intent);
     }
 
-    //  implementation TaskListener
-    @Override
+    private void cancel() {
+        Intent intent = new Intent(this, SongListService.class);
+        intent.putExtra(SongListService.IS_CANCELED, true);
+        startService(intent);
+    }
+
     public void showProgress() {
         mMainLayout.setVisibility(View.GONE);
         mProgressBarLayout.setVisibility(View.VISIBLE);
     }
 
-    @Override
     public void hideProgress() {
         mMainLayout.setVisibility(View.VISIBLE);
         mProgressBarLayout.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onFinalResult(TaskResult<SongList> songs) {
-        if (songs.getError() != null) {
-            Toast.makeText(this, songs.getError(), Toast.LENGTH_SHORT).show();
-            mNumberPages = 0;
-            mTextNumberPages = "";
-            mSongs = null;
-        } else {
-            mNumberPages = getNumberOfPages(songs.getResult().getNumberSongs());
-            mTextNumberPages = getTextNumberText(mPage, mNumberPages);
-            mSongs = songs.getResult().getSongs();
-        }
-        refreshViews(mTextNumberPages, mSongs);
-    }
-
-    private int getNumberOfPages(int numberSongs) {
-        int pages = numberSongs / NUMBER_SONGS_ON_PAGE;
-        if (numberSongs > NUMBER_SONGS_ON_PAGE && numberSongs % NUMBER_SONGS_ON_PAGE > 0) {
-            pages++;
-        } else if (numberSongs <= NUMBER_SONGS_ON_PAGE) {
-            pages = 1;
-        }
-        return pages;
-    }
-
-    private String getTextNumberText(int page, int numberPages) {
-        return "[" + page + " page of " + numberPages + "]";
     }
 
     private void showNavigationButtons() {
@@ -218,7 +188,6 @@ public class StartActivity extends BaseActivity implements
     }
 
     private void refreshViews(String textNumberPages, List<Song> songs) {
-        Log.d(TAG, "refreshViews: " + mSongs);
         if (mSongs == null) {
             hideNavigationButtons();
         } else {
@@ -228,8 +197,8 @@ public class StartActivity extends BaseActivity implements
         mAdapter.setSongList(songs);
         mRecyclerView.scrollToPosition(0);
         mAdapter.notifyDataSetChanged();
-    }
 
+    }
 
     //  implementation ListSongAdapter.OnClickSongListener
     @Override
@@ -248,4 +217,35 @@ public class StartActivity extends BaseActivity implements
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }*/
+
+    private BroadcastReceiver uiUpdate = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getExtras() != null) {
+                boolean isLoading = intent.getExtras().getBoolean(SongListService.IS_LOADING);
+                if (isLoading) {
+                    showProgress();
+                    return;
+                } else {
+                    hideProgress();
+                }
+                mNumberPages = intent.getExtras().getInt(SongListService.NUMBER_PAGES_KEY);
+                mTextNumberPages = intent.getExtras().getString(SongListService.TEXT_NUMBER_PAGES_KEY);
+                mSongs = intent.getExtras().getParcelableArrayList(SongListService.SONG_LIST_KEY);
+                refreshViews(mTextNumberPages, mSongs);
+            }
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(uiUpdate, new IntentFilter(SongListService.SONG_LIST_BROADCAST));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(uiUpdate);
+    }
 }

@@ -30,6 +30,10 @@
         <service
             android:name=".services.AsyncTaskService"
             android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".services.SongListService"
+            android:enabled="true"
             android:exported="true"></service>
     </application>
 

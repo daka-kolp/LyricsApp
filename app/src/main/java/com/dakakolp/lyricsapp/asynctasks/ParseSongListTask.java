@@ -1,7 +1,6 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
@@ -50,7 +49,6 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
         if (songList.isEmpty()) {
             return new TaskResult<>("Sorry, your search returned no results...");
         }
-        Log.d("qwerty", "doInBackground: " + songList);
         return new TaskResult<>(new SongList(songList, numberSongs));
     }
 
@@ -91,4 +89,5 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
         }
         return songs;
     }
+
 }
