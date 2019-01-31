@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.asynctasks.ParseSongLyricTask;
@@ -12,7 +11,7 @@ import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongLyric;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskResult;
 
-public class SongLyricService extends Service implements TaskListener<SongLyric> {
+public class SongLyricService extends BaseService implements TaskListener<SongLyric> {
     public static final String SONG_LYRIC_BROADCAST = "song_lyric broadcast";
     public static final String LOAD_STATUS_BROADCAST = "loading_status broadcast";
 
@@ -24,11 +23,6 @@ public class SongLyricService extends Service implements TaskListener<SongLyric>
     private ParseSongLyricTask mParseSongLyricTask;
 
     public SongLyricService() {
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
     @Override

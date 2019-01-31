@@ -19,9 +19,12 @@ public class LyricActivity extends BaseActivity{
 
     private static final String TEXT_SAVE_INST_KEY = "lyric_text key";
     private static final String LYRIC_SAVE_INST_KEY = "lyric_obj key";
+    private static final String IS_LOADING_KEY = "is lyric loading";
+
     private TextView mTextViewTitle;
     private TextView mTextViewLyric;
 
+    private boolean isLoading;
     private FrameLayout mProgressBar;
 
     private Lyric mLyric;
@@ -31,12 +34,8 @@ public class LyricActivity extends BaseActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getExtras() != null) {
-                boolean isLoading = intent.getExtras().getBoolean(SongLyricService.IS_LYRIC_LOADING, false);
-                if (isLoading) {
-                    showProgress();
-                } else {
-                    hideProgress();
-                }
+                isLoading = intent.getExtras().getBoolean(SongLyricService.IS_LYRIC_LOADING, false);
+                updateProgress(isLoading);
             }
         }
     };
@@ -68,6 +67,7 @@ public class LyricActivity extends BaseActivity{
         super.onSaveInstanceState(outState);
         outState.putParcelable(LYRIC_SAVE_INST_KEY, mLyric);
         outState.putString(TEXT_SAVE_INST_KEY, mLyricText);
+        outState.putBoolean(IS_LOADING_KEY, isLoading);
     }
 
     @Override
@@ -91,6 +91,10 @@ public class LyricActivity extends BaseActivity{
             mLyric = savedInstanceState.getParcelable(LYRIC_SAVE_INST_KEY);
             mLyricText = savedInstanceState.getString(TEXT_SAVE_INST_KEY);
             updateViews(mLyric, mLyricText);
+
+            isLoading = savedInstanceState.getBoolean(IS_LOADING_KEY);
+            updateProgress(isLoading);
+
         } else {
             mLyric = getDataIntent();
             downloadLyric(mLyric.getLink());
@@ -126,4 +130,11 @@ public class LyricActivity extends BaseActivity{
         mTextViewLyric.setText(textSong);
     }
 
+    private void updateProgress(boolean loading) {
+        if (loading) {
+            showProgress();
+        } else {
+            hideProgress();
+        }
+    }
 }

@@ -16,7 +16,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.dakakolp.lyricsapp.R;
-import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
 import com.dakakolp.lyricsapp.models.Lyric;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.services.SongListService;
@@ -35,6 +34,7 @@ public class StartActivity extends BaseActivity {
     private static final String SEARCH_STRING_KEY = "search_string key";
     private static final String NUMBER_PAGES_KEY = "number_pages key";
     private static final String SONG_LIST_KEY = "song_list key";
+    private static final String IS_LOADING_KEY = "is_loading key";
 
     public static final String LYRIC_KEY = "link_to_lyric key";
 
@@ -45,6 +45,7 @@ public class StartActivity extends BaseActivity {
     private List<Song> mSongs;
     private String mTextNumberPages;
 
+    private boolean isLoading;
     private FrameLayout mProgressBarLayout;
     private LinearLayout mMainLayout;
 
@@ -75,12 +76,8 @@ public class StartActivity extends BaseActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getExtras() != null) {
-                boolean isLoading = intent.getExtras().getBoolean(SongListService.IS_LOADING, false);
-                if (isLoading) {
-                    showProgress();
-                } else {
-                    hideProgress();
-                }
+                isLoading = intent.getExtras().getBoolean(SongListService.IS_LOADING, false);
+                updateProgress(isLoading);
             }
         }
     };
@@ -117,14 +114,9 @@ public class StartActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 hideProgress();
-                cancel();
+                cancelLoading();
             }
         });
-    }
-    private void cancel() {
-        Intent intent = new Intent(this, SongListService.class);
-        intent.putExtra(SongListService.IS_CANCELED, true);
-        startService(intent);
     }
 
     @Override
@@ -135,6 +127,7 @@ public class StartActivity extends BaseActivity {
         outState.putString(SEARCH_STRING_KEY, mSearchString);
         outState.putString(TEXT_NUMBER_PAGES_KEY, mTextNumberPages);
         outState.putParcelableArrayList(SONG_LIST_KEY, (ArrayList<Song>) mSongs);
+        outState.putBoolean(IS_LOADING_KEY, isLoading);
     }
 
     @Override
@@ -191,6 +184,7 @@ public class StartActivity extends BaseActivity {
                 mTextNumberPages = savedInstanceState.getString(TEXT_NUMBER_PAGES_KEY);
                 updateViews(mTextNumberPages, mSongs);
             }
+            isLoading = savedInstanceState.getBoolean(IS_LOADING_KEY);
         }
     }
 
@@ -254,6 +248,19 @@ public class StartActivity extends BaseActivity {
         mProgressBarLayout.setVisibility(View.GONE);
     }
 
+    private void updateProgress(boolean loading) {
+        if (loading) {
+            showProgress();
+        } else {
+            hideProgress();
+        }
+    }
+
+    private void cancelLoading() {
+        Intent intent = new Intent(this, SongListService.class);
+        intent.putExtra(SongListService.IS_CANCELED, true);
+        startService(intent);
+    }
     /*    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);

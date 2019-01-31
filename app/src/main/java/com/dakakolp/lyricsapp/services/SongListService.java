@@ -17,7 +17,7 @@ import com.dakakolp.lyricsapp.services.receivermodels.DataSearchResponse;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SongListService extends Service implements TaskListener<SongList> {
+public class SongListService extends BaseService implements TaskListener<SongList> {
     public static final String SONG_LIST_RECEIVER = "song list receiver";
     public static final String LOAD_STATUS_RECEIVER = "load status receiver";
 
