@@ -16,16 +16,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.dakakolp.lyricsapp.R;
+import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
 import com.dakakolp.lyricsapp.models.Lyric;
 import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.services.SongListService;
+import com.dakakolp.lyricsapp.services.receivermodels.DataSearchRequest;
+import com.dakakolp.lyricsapp.services.receivermodels.DataSearchResponse;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StartActivity extends BaseActivity implements
-        ListSongAdapter.OnClickSongListener {
+public class StartActivity extends BaseActivity {
 //    public static final String TAG = "qwerty";
 
     private static final String PAGE_KEY = "page key";
@@ -33,7 +35,8 @@ public class StartActivity extends BaseActivity implements
     private static final String SEARCH_STRING_KEY = "search_string key";
     private static final String NUMBER_PAGES_KEY = "number_pages key";
     private static final String SONG_LIST_KEY = "song_list key";
-    public static final String INTENT_LYRIC_KEY = "link_to_lyric key";
+
+    public static final String LYRIC_KEY = "link_to_lyric key";
 
     private int mPage;
     private String mSearchString;
@@ -53,6 +56,34 @@ public class StartActivity extends BaseActivity implements
     private RecyclerView mRecyclerView;
     private ListSongAdapter mAdapter;
 
+    private BroadcastReceiver mSongListReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getExtras() != null) {
+                DataSearchResponse response = intent.getExtras().getParcelable(SongListService.DATA_SEARCH_RESPONSE);
+                if(response != null) {
+                    mNumberPages = response.getNumberPages();
+                    mTextNumberPages = response.getTextNumberPages();
+                    mSongs = response.getSongs();
+                    updateViews(mTextNumberPages, mSongs);
+                }
+            }
+        }
+    };
+
+    private BroadcastReceiver mLoadingStatusReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getExtras() != null) {
+                boolean isLoading = intent.getExtras().getBoolean(SongListService.IS_LOADING, false);
+                if (isLoading) {
+                    showProgress();
+                } else {
+                    hideProgress();
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +121,11 @@ public class StartActivity extends BaseActivity implements
             }
         });
     }
+    private void cancel() {
+        Intent intent = new Intent(this, SongListService.class);
+        intent.putExtra(SongListService.IS_CANCELED, true);
+        startService(intent);
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -99,6 +135,20 @@ public class StartActivity extends BaseActivity implements
         outState.putString(SEARCH_STRING_KEY, mSearchString);
         outState.putString(TEXT_NUMBER_PAGES_KEY, mTextNumberPages);
         outState.putParcelableArrayList(SONG_LIST_KEY, (ArrayList<Song>) mSongs);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(mSongListReceiver, new IntentFilter(SongListService.SONG_LIST_RECEIVER));
+        registerReceiver(mLoadingStatusReceiver, new IntentFilter(SongListService.LOAD_STATUS_RECEIVER));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(mSongListReceiver);
+        unregisterReceiver(mLoadingStatusReceiver);
     }
 
     private void initViews() {
@@ -116,19 +166,30 @@ public class StartActivity extends BaseActivity implements
         mRecyclerView = findViewById(R.id.recycler_view_songs);
         LinearLayoutManager gridLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(gridLayoutManager);
-        mAdapter = new ListSongAdapter(this);
+        mAdapter = new ListSongAdapter(new ListSongAdapter.OnClickSongListener() {
+            @Override
+            public void onClickSong(int position) {
+                Intent intent = new Intent(StartActivity.this, LyricActivity.class);
+                intent.putExtra(LYRIC_KEY, new Lyric(
+                        mSongs.get(position).getSinger(),
+                        mSongs.get(position).getSongTitle(),
+                        mSongs.get(position).getLink())
+                );
+                startActivity(intent);
+            }
+        });
         mRecyclerView.setAdapter(mAdapter);
     }
 
     private void restoreData(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            mPage = savedInstanceState.getInt(PAGE_KEY);
-            mNumberPages = savedInstanceState.getInt(NUMBER_PAGES_KEY);
             mSearchString = savedInstanceState.getString(SEARCH_STRING_KEY);
             mSongs = savedInstanceState.getParcelableArrayList(SONG_LIST_KEY);
             if (mSongs != null) {
+                mPage = savedInstanceState.getInt(PAGE_KEY);
+                mNumberPages = savedInstanceState.getInt(NUMBER_PAGES_KEY);
                 mTextNumberPages = savedInstanceState.getString(TEXT_NUMBER_PAGES_KEY);
-                refreshViews(mTextNumberPages, mSongs);
+                updateViews(mTextNumberPages, mSongs);
             }
         }
     }
@@ -156,38 +217,11 @@ public class StartActivity extends BaseActivity implements
 
     private void downloadSongList(int page, String searchString) {
         Intent intent = new Intent(this, SongListService.class);
-        intent.putExtra(SongListService.PAGE_NUMBER, page);
-        intent.putExtra(SongListService.SEARCH_STRING, searchString);
+        intent.putExtra(SongListService.DATA_SEARCH_REQUEST, new DataSearchRequest(page, searchString));
         startService(intent);
     }
 
-    private void cancel() {
-        Intent intent = new Intent(this, SongListService.class);
-        intent.putExtra(SongListService.IS_CANCELED, true);
-        startService(intent);
-    }
-
-    public void showProgress() {
-        mMainLayout.setVisibility(View.GONE);
-        mProgressBarLayout.setVisibility(View.VISIBLE);
-    }
-
-    public void hideProgress() {
-        mMainLayout.setVisibility(View.VISIBLE);
-        mProgressBarLayout.setVisibility(View.GONE);
-    }
-
-    private void showNavigationButtons() {
-        mImageButtonBefore.setVisibility(View.VISIBLE);
-        mImageButtonNext.setVisibility(View.VISIBLE);
-    }
-
-    private void hideNavigationButtons() {
-        mImageButtonBefore.setVisibility(View.GONE);
-        mImageButtonNext.setVisibility(View.GONE);
-    }
-
-    private void refreshViews(String textNumberPages, List<Song> songs) {
+    private void updateViews(String textNumberPages, List<Song> songs) {
         if (mSongs == null) {
             hideNavigationButtons();
         } else {
@@ -200,16 +234,24 @@ public class StartActivity extends BaseActivity implements
 
     }
 
-    //  implementation ListSongAdapter.OnClickSongListener
-    @Override
-    public void onClickSong(int position) {
-        Intent intent = new Intent(StartActivity.this, LyricActivity.class);
-        intent.putExtra(INTENT_LYRIC_KEY, new Lyric(
-                mSongs.get(position).getSinger(),
-                mSongs.get(position).getSongTitle(),
-                mSongs.get(position).getLink())
-        );
-        startActivity(intent);
+    private void showNavigationButtons() {
+        mImageButtonBefore.setVisibility(View.VISIBLE);
+        mImageButtonNext.setVisibility(View.VISIBLE);
+    }
+
+    private void hideNavigationButtons() {
+        mImageButtonBefore.setVisibility(View.GONE);
+        mImageButtonNext.setVisibility(View.GONE);
+    }
+
+    public void showProgress() {
+        mMainLayout.setVisibility(View.GONE);
+        mProgressBarLayout.setVisibility(View.VISIBLE);
+    }
+
+    public void hideProgress() {
+        mMainLayout.setVisibility(View.VISIBLE);
+        mProgressBarLayout.setVisibility(View.GONE);
     }
 
     /*    @Override
@@ -217,35 +259,4 @@ public class StartActivity extends BaseActivity implements
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }*/
-
-    private BroadcastReceiver uiUpdate = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getExtras() != null) {
-                boolean isLoading = intent.getExtras().getBoolean(SongListService.IS_LOADING);
-                if (isLoading) {
-                    showProgress();
-                    return;
-                } else {
-                    hideProgress();
-                }
-                mNumberPages = intent.getExtras().getInt(SongListService.NUMBER_PAGES_KEY);
-                mTextNumberPages = intent.getExtras().getString(SongListService.TEXT_NUMBER_PAGES_KEY);
-                mSongs = intent.getExtras().getParcelableArrayList(SongListService.SONG_LIST_KEY);
-                refreshViews(mTextNumberPages, mSongs);
-            }
-        }
-    };
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        registerReceiver(uiUpdate, new IntentFilter(SongListService.SONG_LIST_BROADCAST));
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        unregisterReceiver(uiUpdate);
-    }
 }

@@ -1,12 +1,9 @@
 package com.dakakolp.lyricsapp.services;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.asynctasks.ParseSongListTask;
@@ -14,25 +11,27 @@ import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongList;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskResult;
 import com.dakakolp.lyricsapp.models.Song;
+import com.dakakolp.lyricsapp.services.receivermodels.DataSearchRequest;
+import com.dakakolp.lyricsapp.services.receivermodels.DataSearchResponse;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SongListService extends Service implements TaskListener<SongList> {
-    public static final String SEARCH_STRING = "search string";
-    public static final String PAGE_NUMBER = "page number";
+    public static final String SONG_LIST_RECEIVER = "song list receiver";
+    public static final String LOAD_STATUS_RECEIVER = "load status receiver";
 
-    public static final String SONG_LIST_BROADCAST = "song list broadcast";
-    public static final String NUMBER_PAGES_KEY = "number_pages key";
-    public static final String TEXT_NUMBER_PAGES_KEY = "text_number_pages key";
-    public static final String SONG_LIST_KEY = "song_list key";
-    public static final String IS_LOADING = "is loading" ;
+    public static final String IS_LOADING = "is loading";
     public static final String IS_CANCELED = "is canceled";
+
+    public static final String DATA_SEARCH_RESPONSE = "data search response";
+    public static final String DATA_SEARCH_REQUEST = "data search request";
 
     private static final int NUMBER_SONGS_ON_PAGE = 20;
 
     private int mPage;
     private ParseSongListTask mParseSongListTask;
+
     public SongListService() {
     }
 
@@ -47,35 +46,41 @@ public class SongListService extends Service implements TaskListener<SongList> {
         Bundle bundle = intent.getExtras();
         if (bundle != null) {
             boolean isCanceled = bundle.getBoolean(IS_CANCELED, false);
-            if(isCanceled){
+            if (isCanceled) {
                 if (mParseSongListTask != null) {
                     mParseSongListTask.cancel(true);
-                    return START_STICKY;
+                    return START_REDELIVER_INTENT;
                 }
             }
-            mPage = bundle.getInt(PAGE_NUMBER);
-            String searchString = bundle.getString(SEARCH_STRING);
-            executeTask(mPage, searchString);
+            DataSearchRequest request = bundle.getParcelable(DATA_SEARCH_REQUEST);
+            if (request != null) {
+                mPage = request.getPage();
+                executeTask(mPage, request.getTextSearch());
+            }
         }
         return START_STICKY;
     }
 
     private void executeTask(int page, String searchString) {
-        mParseSongListTask = new ParseSongListTask(page, this);
-        mParseSongListTask.execute(searchString);
+        if (!searchString.isEmpty()) {
+            mParseSongListTask = new ParseSongListTask(page, this);
+            mParseSongListTask.execute(searchString);
+        }
     }
 
     @Override
     public void showProgress() {
-        Intent i = new Intent(SONG_LIST_BROADCAST);
-        i.putExtra(IS_LOADING, true);
-        sendBroadcast(i);
+        sendLoadingStatus(true);
     }
 
     @Override
     public void hideProgress() {
-        Intent i = new Intent(SONG_LIST_BROADCAST);
-        i.putExtra(IS_LOADING, false);
+        sendLoadingStatus(false);
+    }
+
+    private void sendLoadingStatus(boolean isLoading) {
+        Intent i = new Intent(LOAD_STATUS_RECEIVER);
+        i.putExtra(IS_LOADING, isLoading);
         sendBroadcast(i);
     }
 
@@ -94,10 +99,13 @@ public class SongListService extends Service implements TaskListener<SongList> {
             textNumberPages = getTextNumberText(mPage, numberPages);
             songs = songList.getResult().getSongs();
         }
-        Intent i = new Intent(SONG_LIST_BROADCAST);
-        i.putExtra(NUMBER_PAGES_KEY, numberPages);
-        i.putExtra(TEXT_NUMBER_PAGES_KEY, textNumberPages);
-        i.putParcelableArrayListExtra(SONG_LIST_KEY, (ArrayList<Song>) songs);
+        sendResponse(numberPages, textNumberPages, songs);
+    }
+
+    private void sendResponse(int numberPages, String textNumberPages, List<Song> songs) {
+        DataSearchResponse response = new DataSearchResponse(numberPages, textNumberPages, songs);
+        Intent i = new Intent(SONG_LIST_RECEIVER);
+        i.putExtra(DATA_SEARCH_RESPONSE, response);
         sendBroadcast(i);
     }
 

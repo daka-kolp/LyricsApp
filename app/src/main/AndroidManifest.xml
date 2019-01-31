@@ -28,11 +28,11 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <service
-            android:name=".services.AsyncTaskService"
+            android:name=".services.SongListService"
             android:enabled="true"
             android:exported="true" />
         <service
-            android:name=".services.SongListService"
+            android:name=".services.SongLyricService"
             android:enabled="true"
             android:exported="true"></service>
     </application>
