@@ -6,60 +6,59 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.models.Lyric;
+import com.dakakolp.lyricsapp.services.SongListService;
 import com.dakakolp.lyricsapp.services.SongLyricService;
 
-public class LyricActivity extends BaseActivity{
+public class LyricActivity extends BaseActivity {
 
     private static final String TEXT_SAVE_INST_KEY = "lyric_text key";
     private static final String LYRIC_SAVE_INST_KEY = "lyric_obj key";
-    private static final String IS_LOADING_KEY = "is lyric loading";
 
     private TextView mTextViewTitle;
     private TextView mTextViewLyric;
 
-    private boolean isLoading;
     private FrameLayout mProgressBar;
 
     private Lyric mLyric;
     private String mLyricText;
 
-    private BroadcastReceiver mLoadingStatusReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getExtras() != null) {
-                isLoading = intent.getExtras().getBoolean(SongLyricService.IS_LYRIC_LOADING, false);
-                updateProgress(isLoading);
-            }
-        }
-    };
     private BroadcastReceiver mLyricReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getExtras() != null) {
-                mLyricText = intent.getExtras().getString(SongLyricService.TEXT_LYRIC_KEY);
-                updateViews(mLyric, mLyricText);
+                int status = intent.getExtras().getInt(SongListService.PARAM_STATUS, 0);
+                switch (status) {
+                    case SongListService.STATUS_START:
+                        updateProgress(true);
+                        break;
+                    case SongListService.STATUS_FINISH:
+                        updateProgress(false);
+                        break;
+                    case SongListService.STATUS_RESULT:
+                        mLyricText = intent.getExtras().getString(SongLyricService.PARAM_TEXT_LYRIC);
+                        updateViews(mLyric, mLyricText);
+                        break;
+                }
             }
         }
     };
+
     @Override
     protected void onStart() {
         super.onStart();
         registerReceiver(mLyricReceiver, new IntentFilter(SongLyricService.SONG_LYRIC_BROADCAST));
-        registerReceiver(mLoadingStatusReceiver, new IntentFilter(SongLyricService.LOAD_STATUS_BROADCAST));
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         unregisterReceiver(mLyricReceiver);
-        unregisterReceiver(mLoadingStatusReceiver);
     }
 
     @Override
@@ -67,7 +66,6 @@ public class LyricActivity extends BaseActivity{
         super.onSaveInstanceState(outState);
         outState.putParcelable(LYRIC_SAVE_INST_KEY, mLyric);
         outState.putString(TEXT_SAVE_INST_KEY, mLyricText);
-        outState.putBoolean(IS_LOADING_KEY, isLoading);
     }
 
     @Override
@@ -91,10 +89,6 @@ public class LyricActivity extends BaseActivity{
             mLyric = savedInstanceState.getParcelable(LYRIC_SAVE_INST_KEY);
             mLyricText = savedInstanceState.getString(TEXT_SAVE_INST_KEY);
             updateViews(mLyric, mLyricText);
-
-            isLoading = savedInstanceState.getBoolean(IS_LOADING_KEY);
-            updateProgress(isLoading);
-
         } else {
             mLyric = getDataIntent();
             downloadLyric(mLyric.getLink());
@@ -105,9 +99,10 @@ public class LyricActivity extends BaseActivity{
         Intent intent = getIntent();
         return intent.getParcelableExtra(StartActivity.LYRIC_KEY);
     }
+
     private void downloadLyric(String link) {
         Intent intent = new Intent(this, SongLyricService.class);
-        intent.putExtra(SongLyricService.LINK_LYRIC_KEY, link);
+        intent.putExtra(SongLyricService.PARAM_LINK_LYRIC, link);
         startService(intent);
     }
 
@@ -117,17 +112,12 @@ public class LyricActivity extends BaseActivity{
             getSupportActionBar().setTitle(title);
     }
 
-    public void showProgress() {
+    private void showProgress() {
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
-    public void hideProgress() {
+    private void hideProgress() {
         mProgressBar.setVisibility(View.GONE);
-    }
-
-    private void updateViews(Lyric lyric, String textSong) {
-        mTextViewTitle.setText(lyric.getTitle() + "\nby\n" + lyric.getSinger());
-        mTextViewLyric.setText(textSong);
     }
 
     private void updateProgress(boolean loading) {
@@ -136,5 +126,10 @@ public class LyricActivity extends BaseActivity{
         } else {
             hideProgress();
         }
+    }
+
+    private void updateViews(Lyric lyric, String textSong) {
+        mTextViewTitle.setText(lyric.getTitle() + "\nby\n" + lyric.getSinger());
+        mTextViewLyric.setText(textSong);
     }
 }

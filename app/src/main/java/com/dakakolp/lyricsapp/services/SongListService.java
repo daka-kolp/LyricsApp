@@ -1,6 +1,5 @@
 package com.dakakolp.lyricsapp.services;
 
-import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -14,18 +13,19 @@ import com.dakakolp.lyricsapp.models.Song;
 import com.dakakolp.lyricsapp.services.receivermodels.DataSearchRequest;
 import com.dakakolp.lyricsapp.services.receivermodels.DataSearchResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SongListService extends BaseService implements TaskListener<SongList> {
     public static final String SONG_LIST_RECEIVER = "song list receiver";
-    public static final String LOAD_STATUS_RECEIVER = "load status receiver";
-
-    public static final String IS_LOADING = "is loading";
     public static final String IS_CANCELED = "is canceled";
 
-    public static final String DATA_SEARCH_RESPONSE = "data search response";
-    public static final String DATA_SEARCH_REQUEST = "data search request";
+    public static final String PARAM_DATA_SEARCH_REQUEST = "data search request";
+    public static final String PARAM_DATA_SEARCH_RESPONSE = "data search response";
+    public final static String PARAM_STATUS = "status";
+
+    public static final int STATUS_START = 100;
+    public static final int STATUS_FINISH = 200;
+    public static final int STATUS_RESULT = 300;
 
     private static final int NUMBER_SONGS_ON_PAGE = 20;
 
@@ -49,10 +49,10 @@ public class SongListService extends BaseService implements TaskListener<SongLis
             if (isCanceled) {
                 if (mParseSongListTask != null) {
                     mParseSongListTask.cancel(true);
-                    return START_REDELIVER_INTENT;
+                    return START_STICKY;
                 }
             }
-            DataSearchRequest request = bundle.getParcelable(DATA_SEARCH_REQUEST);
+            DataSearchRequest request = bundle.getParcelable(PARAM_DATA_SEARCH_REQUEST);
             if (request != null) {
                 mPage = request.getPage();
                 executeTask(mPage, request.getTextSearch());
@@ -70,17 +70,17 @@ public class SongListService extends BaseService implements TaskListener<SongLis
 
     @Override
     public void showProgress() {
-        sendLoadingStatus(true);
+        sendLoadingStatus(STATUS_START);
     }
 
     @Override
     public void hideProgress() {
-        sendLoadingStatus(false);
+        sendLoadingStatus(STATUS_FINISH);
     }
 
-    private void sendLoadingStatus(boolean isLoading) {
-        Intent i = new Intent(LOAD_STATUS_RECEIVER);
-        i.putExtra(IS_LOADING, isLoading);
+    private void sendLoadingStatus(int status) {
+        Intent i = new Intent(SONG_LIST_RECEIVER);
+        i.putExtra(PARAM_STATUS, status);
         sendBroadcast(i);
     }
 
@@ -105,7 +105,8 @@ public class SongListService extends BaseService implements TaskListener<SongLis
     private void sendResponse(int numberPages, String textNumberPages, List<Song> songs) {
         DataSearchResponse response = new DataSearchResponse(numberPages, textNumberPages, songs);
         Intent i = new Intent(SONG_LIST_RECEIVER);
-        i.putExtra(DATA_SEARCH_RESPONSE, response);
+        i.putExtra(PARAM_STATUS, STATUS_RESULT);
+        i.putExtra(PARAM_DATA_SEARCH_RESPONSE, response);
         sendBroadcast(i);
     }
 

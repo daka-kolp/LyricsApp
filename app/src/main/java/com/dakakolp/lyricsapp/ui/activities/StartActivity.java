@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -27,14 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StartActivity extends BaseActivity {
-//    public static final String TAG = "qwerty";
 
     private static final String PAGE_KEY = "page key";
     public static final String TEXT_NUMBER_PAGES_KEY = "text_number_pages key";
     private static final String SEARCH_STRING_KEY = "search_string key";
     private static final String NUMBER_PAGES_KEY = "number_pages key";
     private static final String SONG_LIST_KEY = "song_list key";
-    private static final String IS_LOADING_KEY = "is_loading key";
 
     public static final String LYRIC_KEY = "link_to_lyric key";
 
@@ -45,7 +44,6 @@ public class StartActivity extends BaseActivity {
     private List<Song> mSongs;
     private String mTextNumberPages;
 
-    private boolean isLoading;
     private FrameLayout mProgressBarLayout;
     private LinearLayout mMainLayout;
 
@@ -61,23 +59,26 @@ public class StartActivity extends BaseActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getExtras() != null) {
-                DataSearchResponse response = intent.getExtras().getParcelable(SongListService.DATA_SEARCH_RESPONSE);
-                if(response != null) {
-                    mNumberPages = response.getNumberPages();
-                    mTextNumberPages = response.getTextNumberPages();
-                    mSongs = response.getSongs();
-                    updateViews(mTextNumberPages, mSongs);
+                int status = intent.getExtras().getInt(SongListService.PARAM_STATUS, 0);
+                Log.d(LOG_TAG, "onReceive: " + status);
+                switch (status) {
+                    case SongListService.STATUS_START:
+                        updateProgress(true);
+                        break;
+                    case SongListService.STATUS_FINISH:
+                        updateProgress(false);
+                        break;
+                    case SongListService.STATUS_RESULT:
+                        DataSearchResponse response = intent.getExtras().getParcelable(SongListService.PARAM_DATA_SEARCH_RESPONSE);
+                        if (response != null) {
+                            mNumberPages = response.getNumberPages();
+                            mTextNumberPages = response.getTextNumberPages();
+                            mSongs = response.getSongs();
+                            updateViews(mTextNumberPages, mSongs);
+                        }
+                        break;
                 }
-            }
-        }
-    };
 
-    private BroadcastReceiver mLoadingStatusReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getExtras() != null) {
-                isLoading = intent.getExtras().getBoolean(SongListService.IS_LOADING, false);
-                updateProgress(isLoading);
             }
         }
     };
@@ -127,21 +128,18 @@ public class StartActivity extends BaseActivity {
         outState.putString(SEARCH_STRING_KEY, mSearchString);
         outState.putString(TEXT_NUMBER_PAGES_KEY, mTextNumberPages);
         outState.putParcelableArrayList(SONG_LIST_KEY, (ArrayList<Song>) mSongs);
-        outState.putBoolean(IS_LOADING_KEY, isLoading);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         registerReceiver(mSongListReceiver, new IntentFilter(SongListService.SONG_LIST_RECEIVER));
-        registerReceiver(mLoadingStatusReceiver, new IntentFilter(SongListService.LOAD_STATUS_RECEIVER));
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         unregisterReceiver(mSongListReceiver);
-        unregisterReceiver(mLoadingStatusReceiver);
     }
 
     private void initViews() {
@@ -177,25 +175,27 @@ public class StartActivity extends BaseActivity {
     private void restoreData(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             mSearchString = savedInstanceState.getString(SEARCH_STRING_KEY);
+            mPage = savedInstanceState.getInt(PAGE_KEY);
+            mNumberPages = savedInstanceState.getInt(NUMBER_PAGES_KEY);
             mSongs = savedInstanceState.getParcelableArrayList(SONG_LIST_KEY);
             if (mSongs != null) {
-                mPage = savedInstanceState.getInt(PAGE_KEY);
-                mNumberPages = savedInstanceState.getInt(NUMBER_PAGES_KEY);
                 mTextNumberPages = savedInstanceState.getString(TEXT_NUMBER_PAGES_KEY);
                 updateViews(mTextNumberPages, mSongs);
             }
-            isLoading = savedInstanceState.getBoolean(IS_LOADING_KEY);
         }
     }
 
+    private static String LOG_TAG = "qwerty";
     private void clickOnSearch() {
         mPage = 1;
+        Log.d(LOG_TAG, "clickOnSearch: " + mPage);
         mSearchString = mEditTextSearch.getText().toString();
         downloadSongList(mPage, mSearchString);
         closeKeyboard();
     }
 
     private void clickOnBefore() {
+        Log.d(LOG_TAG, "clickOnBefore: " + mPage);
         if (mPage > 1) {
             mPage--;
             downloadSongList(mPage, mSearchString);
@@ -203,6 +203,7 @@ public class StartActivity extends BaseActivity {
     }
 
     private void clickOnNext() {
+        Log.d(LOG_TAG, "clickOnNext: " + mPage + " " + mNumberPages);
         if (mPage >= 1 && mPage < mNumberPages) {
             mPage++;
             downloadSongList(mPage, mSearchString);
@@ -211,7 +212,7 @@ public class StartActivity extends BaseActivity {
 
     private void downloadSongList(int page, String searchString) {
         Intent intent = new Intent(this, SongListService.class);
-        intent.putExtra(SongListService.DATA_SEARCH_REQUEST, new DataSearchRequest(page, searchString));
+        intent.putExtra(SongListService.PARAM_DATA_SEARCH_REQUEST, new DataSearchRequest(page, searchString));
         startService(intent);
     }
 
@@ -238,12 +239,12 @@ public class StartActivity extends BaseActivity {
         mImageButtonNext.setVisibility(View.GONE);
     }
 
-    public void showProgress() {
+    private void showProgress() {
         mMainLayout.setVisibility(View.GONE);
         mProgressBarLayout.setVisibility(View.VISIBLE);
     }
 
-    public void hideProgress() {
+    private void hideProgress() {
         mMainLayout.setVisibility(View.VISIBLE);
         mProgressBarLayout.setVisibility(View.GONE);
     }

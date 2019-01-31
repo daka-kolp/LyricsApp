@@ -1,9 +1,7 @@
 package com.dakakolp.lyricsapp.services;
 
-import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.widget.Toast;
 
 import com.dakakolp.lyricsapp.asynctasks.ParseSongLyricTask;
@@ -13,14 +11,15 @@ import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskResult;
 
 public class SongLyricService extends BaseService implements TaskListener<SongLyric> {
     public static final String SONG_LYRIC_BROADCAST = "song_lyric broadcast";
-    public static final String LOAD_STATUS_BROADCAST = "loading_status broadcast";
 
-    public static final String LINK_LYRIC_KEY = "link_lyric key";
-    public static final String TEXT_LYRIC_KEY = "text_lyric key";
+    public static final String PARAM_LINK_LYRIC = "link_lyric key";
+    public static final String PARAM_TEXT_LYRIC = "text_lyric key";
+    public final static String PARAM_STATUS = "status";
 
-    public static final String IS_LYRIC_LOADING = "is lyric loading";
 
-    private ParseSongLyricTask mParseSongLyricTask;
+    public static final int STATUS_START = 100;
+    public static final int STATUS_FINISH = 200;
+    public static final int STATUS_RESULT = 300;
 
     public SongLyricService() {
     }
@@ -30,30 +29,30 @@ public class SongLyricService extends BaseService implements TaskListener<SongLy
         super.onStartCommand(intent, flags, startId);
         Bundle bundle = intent.getExtras();
         if(bundle != null) {
-            String link = intent.getExtras().getString(LINK_LYRIC_KEY);
+            String link = intent.getExtras().getString(PARAM_LINK_LYRIC);
             executeTask(link);
         }
         return START_STICKY;
     }
 
     private void executeTask(String link) {
-        mParseSongLyricTask = new ParseSongLyricTask(this);
-        mParseSongLyricTask.execute(link);
+        ParseSongLyricTask parseSongLyricTask = new ParseSongLyricTask(this);
+        parseSongLyricTask.execute(link);
     }
 
     @Override
     public void showProgress() {
-        sendLoadingStatus(true);
+        sendLoadingStatus(STATUS_START);
     }
 
     @Override
     public void hideProgress() {
-        sendLoadingStatus(false);
+        sendLoadingStatus(STATUS_FINISH);
     }
 
-    private void sendLoadingStatus(boolean isLoading){
-        Intent i = new Intent(LOAD_STATUS_BROADCAST);
-        i.putExtra(IS_LYRIC_LOADING, isLoading);
+    private void sendLoadingStatus(int status){
+        Intent i = new Intent(SONG_LYRIC_BROADCAST);
+        i.putExtra(PARAM_STATUS, status);
         sendBroadcast(i);
     }
 
@@ -65,7 +64,8 @@ public class SongLyricService extends BaseService implements TaskListener<SongLy
         }
         String lyricText = textSong.getResult().getText();
         Intent i = new Intent(SONG_LYRIC_BROADCAST);
-        i.putExtra(TEXT_LYRIC_KEY, lyricText);
+        i.putExtra(PARAM_STATUS, STATUS_RESULT);
+        i.putExtra(PARAM_TEXT_LYRIC, lyricText);
         sendBroadcast(i);
     }
 }
