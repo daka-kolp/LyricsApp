@@ -10,15 +10,15 @@ import com.dakakolp.lyricsapp.asynctasks.asyncmodels.SongLyric;
 import com.dakakolp.lyricsapp.asynctasks.asyncmodels.TaskResult;
 
 public class SongLyricService extends BaseService implements TaskListener<SongLyric> {
-    public static final String SONG_LYRIC_BROADCAST = "song_lyric broadcast";
+    public static final String SONG_LYRIC_RECEIVER = "songLyricReceiver";
 
-    public static final String PARAM_LINK_LYRIC = "link_lyric key";
-    public static final String PARAM_TEXT_LYRIC = "text_lyric key";
+    public static final String PARAM_LINK_LYRIC = "linkLyricKey";
+    public static final String PARAM_TEXT_LYRIC = "textLyricKey";
     public final static String PARAM_STATUS = "status";
 
 
-    public static final int STATUS_START = 100;
-    public static final int STATUS_FINISH = 200;
+    public static final int STATUS_SHOW_PROGRESS = 100;
+    public static final int STATUS_HIDE_PROGRESS = 200;
     public static final int STATUS_RESULT = 300;
 
     public SongLyricService() {
@@ -42,16 +42,16 @@ public class SongLyricService extends BaseService implements TaskListener<SongLy
 
     @Override
     public void showProgress() {
-        sendLoadingStatus(STATUS_START);
+        sendLoadingStatus(STATUS_SHOW_PROGRESS);
     }
 
     @Override
     public void hideProgress() {
-        sendLoadingStatus(STATUS_FINISH);
+        sendLoadingStatus(STATUS_HIDE_PROGRESS);
     }
 
     private void sendLoadingStatus(int status){
-        Intent i = new Intent(SONG_LYRIC_BROADCAST);
+        Intent i = new Intent(SONG_LYRIC_RECEIVER);
         i.putExtra(PARAM_STATUS, status);
         sendBroadcast(i);
     }
@@ -63,7 +63,7 @@ public class SongLyricService extends BaseService implements TaskListener<SongLy
             return;
         }
         String lyricText = textSong.getResult().getText();
-        Intent i = new Intent(SONG_LYRIC_BROADCAST);
+        Intent i = new Intent(SONG_LYRIC_RECEIVER);
         i.putExtra(PARAM_STATUS, STATUS_RESULT);
         i.putExtra(PARAM_TEXT_LYRIC, lyricText);
         sendBroadcast(i);

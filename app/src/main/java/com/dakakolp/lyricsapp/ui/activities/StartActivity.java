@@ -28,14 +28,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StartActivity extends BaseActivity {
+    private static String LOG_TAG = "qwerty";
 
-    private static final String PAGE_KEY = "page key";
-    public static final String TEXT_NUMBER_PAGES_KEY = "text_number_pages key";
-    private static final String SEARCH_STRING_KEY = "search_string key";
-    private static final String NUMBER_PAGES_KEY = "number_pages key";
-    private static final String SONG_LIST_KEY = "song_list key";
+    private static final String PAGE_KEY = "pageKey";
+    public static final String TEXT_NUMBER_PAGES_KEY = "textNumberPagesKey";
+    private static final String SEARCH_STRING_KEY = "searchStringKey";
+    private static final String NUMBER_PAGES_KEY = "numberPagesKey";
+    private static final String SONG_LIST_KEY = "songListKey";
 
-    public static final String LYRIC_KEY = "link_to_lyric key";
+    public static final String LYRIC_KEY = "linkToLyricKey";
 
     private int mPage;
     private String mSearchString;
@@ -62,11 +63,11 @@ public class StartActivity extends BaseActivity {
                 int status = intent.getExtras().getInt(SongListService.PARAM_STATUS, 0);
                 Log.d(LOG_TAG, "onReceive: " + status);
                 switch (status) {
-                    case SongListService.STATUS_START:
-                        updateProgress(true);
+                    case SongListService.STATUS_SHOW_PROGRESS:
+                        updateStatusProgress(true);
                         break;
-                    case SongListService.STATUS_FINISH:
-                        updateProgress(false);
+                    case SongListService.STATUS_HIDE_PROGRESS:
+                        updateStatusProgress(false);
                         break;
                     case SongListService.STATUS_RESULT:
                         DataSearchResponse response = intent.getExtras().getParcelable(SongListService.PARAM_DATA_SEARCH_RESPONSE);
@@ -121,6 +122,12 @@ public class StartActivity extends BaseActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(mSongListReceiver, new IntentFilter(SongListService.SONG_LIST_RECEIVER));
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(PAGE_KEY, mPage);
@@ -128,12 +135,6 @@ public class StartActivity extends BaseActivity {
         outState.putString(SEARCH_STRING_KEY, mSearchString);
         outState.putString(TEXT_NUMBER_PAGES_KEY, mTextNumberPages);
         outState.putParcelableArrayList(SONG_LIST_KEY, (ArrayList<Song>) mSongs);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        registerReceiver(mSongListReceiver, new IntentFilter(SongListService.SONG_LIST_RECEIVER));
     }
 
     @Override
@@ -185,7 +186,7 @@ public class StartActivity extends BaseActivity {
         }
     }
 
-    private static String LOG_TAG = "qwerty";
+
     private void clickOnSearch() {
         mPage = 1;
         Log.d(LOG_TAG, "clickOnSearch: " + mPage);
@@ -203,7 +204,7 @@ public class StartActivity extends BaseActivity {
     }
 
     private void clickOnNext() {
-        Log.d(LOG_TAG, "clickOnNext: " + mPage + " " + mNumberPages);
+        Log.d(LOG_TAG, "clickOnNext: " + mPage);
         if (mPage >= 1 && mPage < mNumberPages) {
             mPage++;
             downloadSongList(mPage, mSearchString);
@@ -225,6 +226,7 @@ public class StartActivity extends BaseActivity {
         mTextViewNumberPages.setText(textNumberPages);
         mAdapter.setSongList(songs);
         mRecyclerView.scrollToPosition(0);
+        mRecyclerView.hasFixedSize();
         mAdapter.notifyDataSetChanged();
 
     }
@@ -249,7 +251,7 @@ public class StartActivity extends BaseActivity {
         mProgressBarLayout.setVisibility(View.GONE);
     }
 
-    private void updateProgress(boolean loading) {
+    private void updateStatusProgress(boolean loading) {
         if (loading) {
             showProgress();
         } else {

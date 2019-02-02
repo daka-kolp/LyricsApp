@@ -16,15 +16,15 @@ import com.dakakolp.lyricsapp.services.receivermodels.DataSearchResponse;
 import java.util.List;
 
 public class SongListService extends BaseService implements TaskListener<SongList> {
-    public static final String SONG_LIST_RECEIVER = "song list receiver";
-    public static final String IS_CANCELED = "is canceled";
+    public static final String SONG_LIST_RECEIVER = "songListReceiver";
+    public static final String IS_CANCELED = "isCanceled";
 
-    public static final String PARAM_DATA_SEARCH_REQUEST = "data search request";
-    public static final String PARAM_DATA_SEARCH_RESPONSE = "data search response";
+    public static final String PARAM_DATA_SEARCH_REQUEST = "dataSearchRequest";
+    public static final String PARAM_DATA_SEARCH_RESPONSE = "dataSearchResponse";
     public final static String PARAM_STATUS = "status";
 
-    public static final int STATUS_START = 100;
-    public static final int STATUS_FINISH = 200;
+    public static final int STATUS_SHOW_PROGRESS = 100;
+    public static final int STATUS_HIDE_PROGRESS = 200;
     public static final int STATUS_RESULT = 300;
 
     private static final int NUMBER_SONGS_ON_PAGE = 20;
@@ -70,12 +70,12 @@ public class SongListService extends BaseService implements TaskListener<SongLis
 
     @Override
     public void showProgress() {
-        sendLoadingStatus(STATUS_START);
+        sendLoadingStatus(STATUS_SHOW_PROGRESS);
     }
 
     @Override
     public void hideProgress() {
-        sendLoadingStatus(STATUS_FINISH);
+        sendLoadingStatus(STATUS_HIDE_PROGRESS);
     }
 
     private void sendLoadingStatus(int status) {

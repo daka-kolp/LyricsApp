@@ -17,8 +17,8 @@ import com.dakakolp.lyricsapp.services.SongLyricService;
 
 public class LyricActivity extends BaseActivity {
 
-    private static final String TEXT_SAVE_INST_KEY = "lyric_text key";
-    private static final String LYRIC_SAVE_INST_KEY = "lyric_obj key";
+    private static final String TEXT_SAVE_INST_KEY = "lyricTextKey";
+    private static final String LYRIC_SAVE_INST_KEY = "lyricObjKey";
 
     private TextView mTextViewTitle;
     private TextView mTextViewLyric;
@@ -34,15 +34,17 @@ public class LyricActivity extends BaseActivity {
             if (intent.getExtras() != null) {
                 int status = intent.getExtras().getInt(SongListService.PARAM_STATUS, 0);
                 switch (status) {
-                    case SongListService.STATUS_START:
-                        updateProgress(true);
+                    case SongListService.STATUS_SHOW_PROGRESS:
+                        updateStatusProgress(true);
                         break;
-                    case SongListService.STATUS_FINISH:
-                        updateProgress(false);
+                    case SongListService.STATUS_HIDE_PROGRESS:
+                        updateStatusProgress(false);
                         break;
                     case SongListService.STATUS_RESULT:
                         mLyricText = intent.getExtras().getString(SongLyricService.PARAM_TEXT_LYRIC);
-                        updateViews(mLyric, mLyricText);
+                        if (mLyricText != null) {
+                            updateViews();
+                        }
                         break;
                 }
             }
@@ -50,15 +52,19 @@ public class LyricActivity extends BaseActivity {
     };
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        registerReceiver(mLyricReceiver, new IntentFilter(SongLyricService.SONG_LYRIC_BROADCAST));
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_lyric);
+
+        initViews();
+        loadData(savedInstanceState);
+        initToolbar(mLyric.getTitle());
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        unregisterReceiver(mLyricReceiver);
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(mLyricReceiver, new IntentFilter(SongLyricService.SONG_LYRIC_RECEIVER));
     }
 
     @Override
@@ -69,13 +75,22 @@ public class LyricActivity extends BaseActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lyric);
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(mLyricReceiver);
+    }
 
-        initViews();
-        loadData(savedInstanceState);
-        initToolbar(mLyric.getTitle());
+    private void updateStatusProgress(boolean loading) {
+        if (loading) {
+            mProgressBar.setVisibility(View.VISIBLE);
+        } else {
+            mProgressBar.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateViews() {
+        mTextViewTitle.setText(mLyric.getTitle() + "\nby\n" + mLyric.getSinger());
+        mTextViewLyric.setText(mLyricText);
     }
 
     private void initViews() {
@@ -88,11 +103,17 @@ public class LyricActivity extends BaseActivity {
         if (savedInstanceState != null) {
             mLyric = savedInstanceState.getParcelable(LYRIC_SAVE_INST_KEY);
             mLyricText = savedInstanceState.getString(TEXT_SAVE_INST_KEY);
-            updateViews(mLyric, mLyricText);
+            updateViews();
         } else {
             mLyric = getDataIntent();
             downloadLyric(mLyric.getLink());
         }
+    }
+
+    private void initToolbar(String title) {
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        if (getSupportActionBar() != null)
+            getSupportActionBar().setTitle(title);
     }
 
     private Lyric getDataIntent() {
@@ -104,32 +125,5 @@ public class LyricActivity extends BaseActivity {
         Intent intent = new Intent(this, SongLyricService.class);
         intent.putExtra(SongLyricService.PARAM_LINK_LYRIC, link);
         startService(intent);
-    }
-
-    private void initToolbar(String title) {
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        if (getSupportActionBar() != null)
-            getSupportActionBar().setTitle(title);
-    }
-
-    private void showProgress() {
-        mProgressBar.setVisibility(View.VISIBLE);
-    }
-
-    private void hideProgress() {
-        mProgressBar.setVisibility(View.GONE);
-    }
-
-    private void updateProgress(boolean loading) {
-        if (loading) {
-            showProgress();
-        } else {
-            hideProgress();
-        }
-    }
-
-    private void updateViews(Lyric lyric, String textSong) {
-        mTextViewTitle.setText(lyric.getTitle() + "\nby\n" + lyric.getSinger());
-        mTextViewLyric.setText(textSong);
     }
 }
