@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StartActivity extends BaseActivity {
-    private static String LOG_TAG = "qwerty";
+    private static String LOG_TAG = "log_tag";
 
     private static final String PAGE_KEY = "pageKey";
     public static final String TEXT_NUMBER_PAGES_KEY = "textNumberPagesKey";
