@@ -38,8 +38,8 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
                     .header(ParserHelper.USER_AGENT_KEY, ParserHelper.USER_AGENT_VALUE)
                     .get();
 
-            numberSongs = getNumberSongsForListSong(mainDocument);
-            songList = getSongsForListSong(mainDocument);
+            numberSongs = getNumberSongs(mainDocument);
+            songList = getSongs(mainDocument);
         } catch (IOException e) {
             return new TaskResult<>("Error, check connection...");
         } catch (Exception e) {
@@ -52,7 +52,7 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
         return new TaskResult<>(new SongList(songList, numberSongs));
     }
 
-    private int getNumberSongsForListSong(Document mainDocument) {
+    private int getNumberSongs(Document mainDocument) {
         Elements elemPanelHeading = mainDocument.getElementsByClass("panel-heading");
         if (!elemPanelHeading.isEmpty()) {
             Element element = elemPanelHeading.first();
@@ -72,7 +72,7 @@ public class ParseSongListTask extends BaseAsyncTask<SongList> {
         return 0;
     }
 
-    private List<Song> getSongsForListSong(Document mainDocument) {
+    private List<Song> getSongs(Document mainDocument) {
         List<Song> songs = new ArrayList<>();
         Elements elemVisitedLyr = mainDocument.getElementsByClass("text-left visitedlyr");
         for (Element element : elemVisitedLyr) {

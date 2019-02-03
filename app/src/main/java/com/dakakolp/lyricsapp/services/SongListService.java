@@ -15,7 +15,7 @@ import com.dakakolp.lyricsapp.services.receivermodels.DataSearchResponse;
 
 import java.util.List;
 
-public class SongListService extends BaseService implements TaskListener<SongList> {
+public class SongListService extends BaseService {
     public static final String SONG_LIST_RECEIVER = "songListReceiver";
     public static final String IS_CANCELED = "isCanceled";
 
@@ -28,8 +28,6 @@ public class SongListService extends BaseService implements TaskListener<SongLis
     public static final int STATUS_RESULT = 300;
 
     private static final int NUMBER_SONGS_ON_PAGE = 20;
-
-    private int mPage;
     private ParseSongListTask mParseSongListTask;
 
     public SongListService() {
@@ -54,53 +52,54 @@ public class SongListService extends BaseService implements TaskListener<SongLis
             }
             DataSearchRequest request = bundle.getParcelable(PARAM_DATA_SEARCH_REQUEST);
             if (request != null) {
-                mPage = request.getPage();
-                executeTask(mPage, request.getTextSearch());
+                executeParseSongListTask(request.getPage(), request.getTextSearch());
             }
         }
         return START_STICKY;
     }
 
-    private void executeTask(int page, String searchString) {
+    private void executeParseSongListTask(final int page, String searchString) {
         if (!searchString.isEmpty()) {
-            mParseSongListTask = new ParseSongListTask(page, this);
+            mParseSongListTask = new ParseSongListTask(page, new TaskListener<SongList>() {
+                @Override
+                public void showProgress() {
+                    sendLoadingStatus(STATUS_SHOW_PROGRESS);
+                }
+
+                @Override
+                public void hideProgress() {
+                    sendLoadingStatus(STATUS_HIDE_PROGRESS);
+                }
+
+                private void sendLoadingStatus(int status) {
+                    Intent i = new Intent(SONG_LIST_RECEIVER);
+                    i.putExtra(PARAM_STATUS, status);
+                    sendBroadcast(i);
+                }
+
+                @Override
+                public void onFinalResult(TaskResult<SongList> songList) {
+                    int numberPages;
+                    List<Song> songs;
+                    String textNumberPages;
+                    if (songList.getError() != null) {
+                        Toast.makeText(SongListService.this, songList.getError(), Toast.LENGTH_SHORT).show();
+                        numberPages = 0;
+                        textNumberPages = "";
+                        songs = null;
+                    } else {
+                        numberPages = getNumberOfPages(songList.getResult().getNumberSongs());
+                        textNumberPages = getTextNumberText(page, numberPages);
+                        songs = songList.getResult().getSongs();
+                    }
+                    sendResponse(numberPages, textNumberPages, songs);
+                }
+
+            });
             mParseSongListTask.execute(searchString);
         }
     }
 
-    @Override
-    public void showProgress() {
-        sendLoadingStatus(STATUS_SHOW_PROGRESS);
-    }
-
-    @Override
-    public void hideProgress() {
-        sendLoadingStatus(STATUS_HIDE_PROGRESS);
-    }
-
-    private void sendLoadingStatus(int status) {
-        Intent i = new Intent(SONG_LIST_RECEIVER);
-        i.putExtra(PARAM_STATUS, status);
-        sendBroadcast(i);
-    }
-
-    @Override
-    public void onFinalResult(TaskResult<SongList> songList) {
-        int numberPages;
-        List<Song> songs;
-        String textNumberPages;
-        if (songList.getError() != null) {
-            Toast.makeText(this, songList.getError(), Toast.LENGTH_SHORT).show();
-            numberPages = 0;
-            textNumberPages = "";
-            songs = null;
-        } else {
-            numberPages = getNumberOfPages(songList.getResult().getNumberSongs());
-            textNumberPages = getTextNumberText(mPage, numberPages);
-            songs = songList.getResult().getSongs();
-        }
-        sendResponse(numberPages, textNumberPages, songs);
-    }
 
     private void sendResponse(int numberPages, String textNumberPages, List<Song> songs) {
         DataSearchResponse response = new DataSearchResponse(numberPages, textNumberPages, songs);

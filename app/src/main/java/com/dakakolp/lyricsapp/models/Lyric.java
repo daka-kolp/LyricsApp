@@ -14,6 +14,24 @@ public class Lyric implements Parcelable {
         mLink = link;
     }
 
+    private Lyric(Parcel in) {
+        mSinger = in.readString();
+        mTitle = in.readString();
+        mLink = in.readString();
+    }
+
+    public static final Creator<Lyric> CREATOR = new Creator<Lyric>() {
+        @Override
+        public Lyric createFromParcel(Parcel in) {
+            return new Lyric(in);
+        }
+
+        @Override
+        public Lyric[] newArray(int size) {
+            return new Lyric[size];
+        }
+    };
+
     public String getTitle() {
         return mTitle;
     }
@@ -37,24 +55,6 @@ public class Lyric implements Parcelable {
     public void setSinger(String singer) {
         mSinger = singer;
     }
-
-    private Lyric(Parcel in) {
-        mSinger = in.readString();
-        mTitle = in.readString();
-        mLink = in.readString();
-    }
-
-    public static final Creator<Lyric> CREATOR = new Creator<Lyric>() {
-        @Override
-        public Lyric createFromParcel(Parcel in) {
-            return new Lyric(in);
-        }
-
-        @Override
-        public Lyric[] newArray(int size) {
-            return new Lyric[size];
-        }
-    };
 
     @Override
     public int describeContents() {

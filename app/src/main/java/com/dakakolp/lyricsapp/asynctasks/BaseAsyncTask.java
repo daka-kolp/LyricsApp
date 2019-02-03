@@ -1,6 +1,5 @@
 package com.dakakolp.lyricsapp.asynctasks;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 
 import com.dakakolp.lyricsapp.asynctasks.asynclisteners.TaskListener;

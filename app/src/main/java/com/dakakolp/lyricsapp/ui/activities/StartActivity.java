@@ -264,9 +264,4 @@ public class StartActivity extends BaseActivity {
         intent.putExtra(SongListService.IS_CANCELED, true);
         startService(intent);
     }
-    /*    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }*/
 }
