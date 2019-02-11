@@ -12,8 +12,7 @@ import android.widget.TextView;
 
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.models.Lyric;
-import com.dakakolp.lyricsapp.services.SongListService;
-import com.dakakolp.lyricsapp.services.SongLyricService;
+import com.dakakolp.lyricsapp.services.SongService;
 
 public class LyricActivity extends BaseActivity {
 
@@ -32,16 +31,16 @@ public class LyricActivity extends BaseActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getExtras() != null) {
-                int status = intent.getExtras().getInt(SongListService.PARAM_STATUS, 0);
+                int status = intent.getExtras().getInt(SongService.PARAM_STATUS_LYR, 0);
                 switch (status) {
-                    case SongListService.STATUS_SHOW_PROGRESS:
+                    case SongService.STATUS_SHOW_PROGRESS_LYR:
                         updateStatusProgress(true);
                         break;
-                    case SongListService.STATUS_HIDE_PROGRESS:
+                    case SongService.STATUS_HIDE_PROGRESS_LYR:
                         updateStatusProgress(false);
                         break;
-                    case SongListService.STATUS_RESULT:
-                        mLyricText = intent.getExtras().getString(SongLyricService.PARAM_TEXT_LYRIC);
+                    case SongService.STATUS_RESULT_LYR:
+                        mLyricText = intent.getExtras().getString(SongService.PARAM_TEXT_LYRIC);
                         if (mLyricText != null) {
                             updateViews();
                         }
@@ -64,7 +63,7 @@ public class LyricActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(mLyricReceiver, new IntentFilter(SongLyricService.SONG_LYRIC_RECEIVER));
+        registerReceiver(mLyricReceiver, new IntentFilter(SongService.SONG_LYRIC_RECEIVER));
     }
 
     @Override
@@ -122,8 +121,8 @@ public class LyricActivity extends BaseActivity {
     }
 
     private void downloadLyric(String link) {
-        Intent intent = new Intent(this, SongLyricService.class);
-        intent.putExtra(SongLyricService.PARAM_LINK_LYRIC, link);
+        Intent intent = new Intent(this, SongService.class);
+        intent.putExtra(SongService.PARAM_LINK_LYRIC, link);
         startService(intent);
     }
 }

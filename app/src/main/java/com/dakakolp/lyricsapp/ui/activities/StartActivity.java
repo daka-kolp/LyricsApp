@@ -19,7 +19,7 @@ import android.widget.TextView;
 import com.dakakolp.lyricsapp.R;
 import com.dakakolp.lyricsapp.models.Lyric;
 import com.dakakolp.lyricsapp.models.Song;
-import com.dakakolp.lyricsapp.services.SongListService;
+import com.dakakolp.lyricsapp.services.SongService;
 import com.dakakolp.lyricsapp.services.receivermodels.DataSearchRequest;
 import com.dakakolp.lyricsapp.services.receivermodels.DataSearchResponse;
 import com.dakakolp.lyricsapp.ui.adapters.ListSongAdapter;
@@ -60,17 +60,17 @@ public class StartActivity extends BaseActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getExtras() != null) {
-                int status = intent.getExtras().getInt(SongListService.PARAM_STATUS, 0);
+                int status = intent.getExtras().getInt(SongService.PARAM_STATUS_LIST, 0);
                 Log.d(LOG_TAG, "onReceive: " + status);
                 switch (status) {
-                    case SongListService.STATUS_SHOW_PROGRESS:
+                    case SongService.STATUS_SHOW_PROGRESS:
                         updateStatusProgress(true);
                         break;
-                    case SongListService.STATUS_HIDE_PROGRESS:
+                    case SongService.STATUS_HIDE_PROGRESS:
                         updateStatusProgress(false);
                         break;
-                    case SongListService.STATUS_RESULT:
-                        DataSearchResponse response = intent.getExtras().getParcelable(SongListService.PARAM_DATA_SEARCH_RESPONSE);
+                    case SongService.STATUS_RESULT:
+                        DataSearchResponse response = intent.getExtras().getParcelable(SongService.PARAM_DATA_SEARCH_RESPONSE);
                         if (response != null) {
                             mNumberPages = response.getNumberPages();
                             mTextNumberPages = response.getTextNumberPages();
@@ -124,7 +124,7 @@ public class StartActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(mSongListReceiver, new IntentFilter(SongListService.SONG_LIST_RECEIVER));
+        registerReceiver(mSongListReceiver, new IntentFilter(SongService.SONG_LIST_RECEIVER));
     }
 
     @Override
@@ -212,8 +212,8 @@ public class StartActivity extends BaseActivity {
     }
 
     private void downloadSongList(int page, String searchString) {
-        Intent intent = new Intent(this, SongListService.class);
-        intent.putExtra(SongListService.PARAM_DATA_SEARCH_REQUEST, new DataSearchRequest(page, searchString));
+        Intent intent = new Intent(this, SongService.class);
+        intent.putExtra(SongService.PARAM_DATA_SEARCH_REQUEST, new DataSearchRequest(page, searchString));
         startService(intent);
     }
 
@@ -260,8 +260,8 @@ public class StartActivity extends BaseActivity {
     }
 
     private void cancelLoading() {
-        Intent intent = new Intent(this, SongListService.class);
-        intent.putExtra(SongListService.IS_CANCELED, true);
+        Intent intent = new Intent(this, SongService.class);
+        intent.putExtra(SongService.IS_CANCELED, true);
         startService(intent);
     }
 }
